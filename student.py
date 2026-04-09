@@ -81,6 +81,7 @@ class StudentWindow(QtWidgets.QMainWindow):
         class_label = QtWidgets.QLabel("Chọn lớp:")
         self.class_combo = QtWidgets.QComboBox()
         self.class_combo.addItems(["--Chọn--", "D15CNPM1", "D15CNPM2"])
+        self.class_combo.currentTextChanged.connect(self.filter_class)
         
         search_label = QtWidgets.QLabel("Tìm kiếm:")
         self.search_input = QtWidgets.QLineEdit()
@@ -128,13 +129,24 @@ class StudentWindow(QtWidgets.QMainWindow):
         self.main_layout.addWidget(self.content_widget)
 
     def load_data(self):
-        conn = connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM students")
-        rows = cursor.fetchall()
-        conn.close()
-
-        self.display(rows)
+        try:
+            docs = db.collection("students").stream()
+            rows = []
+            for doc in docs:
+                data = doc.to_dict()
+                rows.append([
+                    doc.id,
+                    data.get("mssv", ""),
+                    data.get("name", ""),
+                    data.get("class", ""),
+                    data.get("major", ""),
+                    data.get("birthday", ""),
+                    data.get("phone", ""),
+                    data.get("address", ""),
+                ])
+            self.display(rows)
+        except Exception as e:
+            print(f"Lỗi tải dữ liệu: {e}")
 
     def display(self, rows):
         self.table.setRowCount(0)
@@ -187,14 +199,20 @@ class StudentWindow(QtWidgets.QMainWindow):
         layout.addWidget(btn)
 
         def save():
-            conn = connect()
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO students (mssv, name, class, major, birthday, phone, address)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, [f.text() for f in fields])
-            conn.commit()
-            conn.close()
+            if not fields[0].text() or not fields[1].text():
+                QtWidgets.QMessageBox.warning(dialog, "Lỗi", "MSV và Tên không được trống!")
+                return
+
+            db.collection("students").add({
+                "mssv": fields[0].text(),
+                "name": fields[1].text(),
+                "class": fields[2].text(),
+                "major": fields[3].text(),
+                "birthday": fields[4].text(),
+                "phone": fields[5].text(),
+                "address": fields[6].text(),
+            })
+
             dialog.accept()
             self.load_data()
 
@@ -204,19 +222,20 @@ class StudentWindow(QtWidgets.QMainWindow):
     def edit_student(self, data):
         dialog = QtWidgets.QDialog(self)
         dialog.setWindowTitle("Sửa sinh viên")
-        dialog.setMinimumWidth(400)
+        dialog.resize(400, 300)
+
         layout = QtWidgets.QFormLayout(dialog)
 
-        fields = [QtWidgets.QLineEdit(str(data[i])) for i in range(1, 8)]
-        labels = ["MSV", "Tên", "Lớp", "Ngành", "Ngày sinh" , "SĐT", "Địa chỉ"]
+        fields = [QtWidgets.QLineEdit() for _ in range(7)]
+        labels = ["MSV", "Tên", "Lớp", "Ngành", "Ngày sinh", "SĐT", "Địa chỉ"]
 
-        for l, f in zip(labels, fields):
+        for i, f in enumerate(fields):
+            f.setText(str(data[i+1]))
             f.setMinimumHeight(40)
-            layout.addRow(l, f)
+            layout.addRow(labels[i], f)
 
         btn = QtWidgets.QPushButton("Cập nhật")
         btn.setObjectName("btn_primary")
-        btn.setMinimumHeight(35)
         layout.addWidget(btn)
 
         def update():
@@ -232,165 +251,193 @@ class StudentWindow(QtWidgets.QMainWindow):
             dialog.accept()
             self.load_data()
 
-        btn.clicked.connect(update)
+        btn.clicked.connect(update_data)
         dialog.exec_()
 
     def delete_student(self, id):
         if QtWidgets.QMessageBox.question(self, "Xóa", "Chắc chắn xóa?") == QtWidgets.QMessageBox.Yes:
-            conn = connect()
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM students WHERE id=?", (id,))
-            conn.commit()
-            conn.close()
+            db.collection("students").document(id).delete()
             self.load_data()
 
     def search_student(self):
-        keyword = self.search_input.text()
-
-        conn = connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM students WHERE name LIKE ?", ('%' + keyword + '%',))
-        rows = cursor.fetchall()
-        conn.close()
-
-        self.display(rows)
+        keyword = self.search_input.text().lower()
+        docs = db.collection("students").stream()
+        results = []
+        for doc in docs:
+            d = doc.to_dict()
+            if keyword in d.get("name", "").lower() or keyword in d.get("mssv", "").lower():
+                results.append([doc.id, d.get("mssv"), d.get("name"), d.get("class"), 
+                                d.get("major"), d.get("birthday"), d.get("phone"), d.get("address")])
+        self.display(results)
 
     def filter_class(self):
         cls = self.class_combo.currentText()
-
-        conn = connect()
-        cursor = conn.cursor()
-
         if cls == "--Chọn--":
-            cursor.execute("SELECT * FROM students")
-        else:
-            cursor.execute("SELECT * FROM students WHERE class=?", (cls,))
+            self.load_data()
+            return
 
-        rows = cursor.fetchall()
-        conn.close()
-
-        self.display(rows)
+        docs = db.collection("students").where("class", "==", cls).stream()
+        results = []
+        for doc in docs:
+            d = doc.to_dict()
+            results.append([doc.id, d.get("mssv"), d.get("name"), d.get("class"), 
+                            d.get("major"), d.get("birthday"), d.get("phone"), d.get("address")])
+        self.display(results)
 
     def export_excel(self):
-        conn = connect()
-        df = pd.read_sql_query("SELECT * FROM students", conn)
-        conn.close()
-
-        df.to_excel("students.xlsx", index=False)
-        QtWidgets.QMessageBox.information(self, "OK", "Xuất Excel thành công!")
+        docs = db.collection("students").stream()
+        data_list = []
+        for doc in docs:
+            d = doc.to_dict()
+            d["id"] = doc.id
+            data_list.append(d)
+        if not data_list:
+            QtWidgets.QMessageBox.warning(self, "Lỗi", "Không có dữ liệu để xuất!")
+            return
+            
+        df = pd.DataFrame(data_list)
+        df.to_excel("students_cloud.xlsx", index=False)
+        QtWidgets.QMessageBox.information(self, "Thành công", "Đã xuất file students_cloud.xlsx")
 
     def apply_stylesheet(self):
         self.setStyleSheet("""
-            /* SỬA Ở ĐÂY: Áp dụng font chữ toàn cục cho giao diện */
             * {
                 font-family: 'Segoe UI', 'Roboto', 'Open Sans', Arial, sans-serif;
                 font-size: 14px;
+                color: #333333; 
             }
-            QMainWindow{
-                background-color: #F8F9FD;
+            QMainWindow {
+                background-color: #F5F6F8; /* Nền xám nhạt để làm nổi bật các khối trắng */
             }
-            #sidebar{
+            #sidebar {
                 background-color: #FFFFFF;
                 border-right: 1px solid #E0E0E0;
             }
-            #logo_text{
+            #logo_text {
                 font-size: 22px;
                 font-weight: 800;
-                color: #2196F3;
+                color: #D32F2F;
                 margin-bottom: 10px;
             }
-            QPushButton#menu_btn{
+            
+            #menu_header {
+                color: #B0B0B0;
+                font-size: 12px;
+                font-weight: bold;
+                padding-left: 10px;
+                margin-top: 10px;
+                margin-bottom: 5px;
+            }
+            
+            QPushButton#menu_btn {
                 text-align: left;
-                padding: 12px 15px;
+                padding: 10px 15px;
                 border: none;
                 border-radius: 8px;
                 font-size: 15px;
-                color: #555555;
+                color: #555555; /* Màu xám đậm */
+                background-color: transparent;
                 font-weight: 600;
             }
-            QPushButton#menu_btn:hover{
-                background-color: #F0F4FF;
-                color: #2196F3;
+            QPushButton#menu_btn:hover {
+                background-color: #FFEBEE; /* Hiện nền xám nhạt khi di chuột vào */
             }
-            #main_content{
-                background-color: #F8F9FD;
+
+            QPushButton#menu_btn_active {
+                text-align: left;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 8px;
+                font-size: 15px;
+                color: #FFFFFF; /* Chữ trắng */
+                background-color: #D32F2F; /* Màu đỏ PTIT */
+                font-weight: 600;
             }
-            #page_title{
+
+            #main_content {
+                background-color: #F5F6F8;
+            }
+            #page_title {
                 font-size: 26px;
                 font-weight: bold;
                 color: #333333;
             }
-            #page_subtitle{
+            #page_subtitle {
                 font-size: 13px;
                 color: #888888;
             }
-            QPushButton#btn_primary{
-                background-color: #FFC107;
-                color: #333333;
+
+            QPushButton#btn_primary {
+                background-color: #D32F2F; 
+                color: #FFFFFF; 
                 border: none;
                 border-radius: 6px;
                 padding: 8px 18px;
                 font-weight: bold;
             }
-            QPushButton#btn_primary:hover{
-                background-color: #FFB300;
+            QPushButton#btn_primary:hover {
+                background-color: #B71C1C;
             }
-            QPushButton#btn_secondary{
+            
+            QPushButton#btn_secondary {
                 background-color: #FFFFFF;
-                color: #FFC107;
-                border: 2px solid #FFC107;
+                color: #D32F2F;
+                border: 2px solid #D32F2F;
                 border-radius: 6px;
                 padding: 7px 18px;
                 font-weight: bold;
             }
-            QPushButton#btn_secondary:hover{
-                background-color: #FFF8E1;
+            QPushButton#btn_secondary:hover {
+                background-color: #FFEBEE;
             }
-            QLineEdit, QComboBox{
+            
+            QLineEdit, QComboBox {
                 padding: 8px;
                 border: 1px solid #D0D0D0;
                 border-radius: 5px;
                 background-color: white;
+                color: #333333;
             }
-            QLineEdit:focus, QComboBox:focus{
-                border: 1px solid #2196F3;
+            QLineEdit:focus, QComboBox:focus {
+                border: 1px solid #D32F2F;
             }
-            QTableWidget{
+            
+            QTableWidget {
                 background-color: #FFFFFF;
                 border: 1px solid #E0E0E0;
                 border-radius: 8px;
                 gridline-color: #F0F0F0;
                 outline: 0;
             }
-            
-            QHeaderView::section{
+            QHeaderView::section {
                 background-color: #FFFFFF;
                 padding: 12px 10px;
                 border: none;
-                border-bottom: 2px solid #E0E0E0;
+                border-bottom: 2px solid #D32F2F;
                 font-weight: bold;
                 font-size: 14px;
-                color: #444444;
+                color: #333333;
                 min-height: 40px;
                 qproperty-alignment: AlignCenter;
             }
-            
-            QTableWidget::item{
+            QTableWidget::item {
                 padding: 5px 10px;
                 border-bottom: 1px solid #F5F5F5;
             }
-            QPushButton#action_btn_edit{
-                background-color: #E3F2FD;
-                color: #1976D2;
-                border: none;
+            
+            /* Các nút hành động trong bảng */
+            QPushButton#action_btn_edit {
+                background-color: #F5F5F5;
+                color: #333333;
+                border: 1px solid #E0E0E0;
                 border-radius: 4px;
                 padding: 6px;
                 font-size: 16px;
             }
-            QPushButton#action_btn_edit:hover{
-                background-color: #BBDEFB;
+            QPushButton#action_btn_edit:hover {
+                background-color: #E0E0E0;
             }
-            QPushButton#action_btn_delete{
+            QPushButton#action_btn_delete {
                 background-color: #FFEBEE;
                 color: #D32F2F;
                 border: none;
@@ -402,7 +449,6 @@ class StudentWindow(QtWidgets.QMainWindow):
                 background-color: #FFCDD2;
             }
         """)
-
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
