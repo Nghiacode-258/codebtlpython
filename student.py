@@ -1,12 +1,20 @@
 import sys
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
-from database import connect, init_db
+
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+
+cred = credentials.Certificate(r"D:\VS code\codewep\btlpython\key.json")
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 
 class StudentWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        init_db()
         self.setWindowTitle("🎓 Student Management")
         self.resize(1200, 700)
         self.central_widget = QtWidgets.QWidget()
@@ -22,25 +30,54 @@ class StudentWindow(QtWidgets.QMainWindow):
 
     def setup_sidebar(self):
         self.sidebar = QtWidgets.QFrame()
-        self.sidebar.setFixedWidth(200)
+        self.sidebar.setFixedWidth(250)
         self.sidebar.setObjectName("sidebar")
 
         layout = QtWidgets.QVBoxLayout(self.sidebar)
-        layout.setContentsMargins(10, 40, 10, 20) 
-        layout.setSpacing(10)
+        layout.setContentsMargins(15, 30, 15, 20) 
+        layout.setSpacing(2)
 
-        logo = QtWidgets.QLabel("🎓 STUDENT")
-        logo.setAlignment(QtCore.Qt.AlignCenter)
+        logo = QtWidgets.QLabel("🎓 S-Link")
+        logo.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         logo.setObjectName("logo_text")
         layout.addWidget(logo)
         
         layout.addSpacing(20)
 
-        for text in ["🏠 Trang Chủ", "👨‍🎓 Sinh Viên", "📚 Môn Học"]:
-            btn = QtWidgets.QPushButton(text)
-            btn.setObjectName("menu_btn")
-            btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) 
-            layout.addWidget(btn)
+        menu_items = [
+            {"type": "header", "text": "TỔNG QUAN"},
+            {"type": "active_btn", "text": "🎛️  Trang chủ"},
+            {"type": "btn", "text": "👤  Thông tin cá nhân"},
+            {"type": "space", "height": 15},
+            
+            {"type": "header", "text": "QUẢN LÝ"},
+            {"type": "btn", "text": "👥  Danh sách sinh viên"},
+            {"type": "btn", "text": "📖  Lớp tín chỉ"},
+            {"type": "btn", "text": "📅  Lớp hành chính"},
+            {"type": "space", "height": 15},
+            
+            {"type": "header", "text": "HỆ THỐNG"},
+            {"type": "btn", "text": "⚙️  Cài đặt"},
+        ]
+
+        for item in menu_items:
+            if item["type"] == "header":
+                lbl = QtWidgets.QLabel(item["text"])
+                lbl.setObjectName("menu_header")
+                layout.addWidget(lbl)
+            
+            elif item["type"] == "btn" or item["type"] == "active_btn":
+                btn = QtWidgets.QPushButton(item["text"])
+                if item["type"] == "active_btn":
+                    btn.setObjectName("menu_btn_active")
+                else:
+                    btn.setObjectName("menu_btn")
+                
+                btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) 
+                layout.addWidget(btn)
+            
+            elif item["type"] == "space":
+                layout.addSpacing(item["height"])
 
         layout.addStretch()
         self.main_layout.addWidget(self.sidebar)
@@ -48,14 +85,19 @@ class StudentWindow(QtWidgets.QMainWindow):
     def setup_main(self):
         self.content_widget = QtWidgets.QWidget()
         self.content_widget.setObjectName("main_content")
+
         content_layout = QtWidgets.QVBoxLayout(self.content_widget)
         content_layout.setContentsMargins(30, 20, 30, 20)
+
         header_layout = QtWidgets.QHBoxLayout()
         title_layout = QtWidgets.QVBoxLayout()
+
         title_label = QtWidgets.QLabel("Students")
         title_label.setObjectName("page_title")
+
         subtitle_label = QtWidgets.QLabel("Dashboard / Students")
         subtitle_label.setObjectName("page_subtitle")
+
         title_layout.addWidget(title_label)
         title_layout.addWidget(subtitle_label)
         
@@ -238,16 +280,20 @@ class StudentWindow(QtWidgets.QMainWindow):
         btn.setObjectName("btn_primary")
         layout.addWidget(btn)
 
-        def update():
-            conn = connect()
-            cursor = conn.cursor()
-            cursor.execute("""
-                UPDATE students SET
-                    mssv=?, name=?, class=?, major=?, birthday=?, phone=?, address=?
-                WHERE id=?
-            """, [f.text() for f in fields] + [data[0]])
-            conn.commit()
-            conn.close()
+        def update_data():
+            if not fields[0].text() or not fields[1].text():
+                QtWidgets.QMessageBox.warning(dialog, "Lỗi", "MSV và Tên không được trống!")
+                return
+            db.collection("students").document(data[0]).update({
+                "mssv": fields[0].text(),
+                "name": fields[1].text(),
+                "class": fields[2].text(),
+                "major": fields[3].text(),
+                "birthday": fields[4].text(),
+                "phone": fields[5].text(),
+                "address": fields[6].text(),
+            })
+
             dialog.accept()
             self.load_data()
 
