@@ -5,6 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import setting
 from lophanhchinh import StudentDashboard
 from thongtincanhan import PersonalInfoWidget
+from homepage import Studenthomepage
 
 import firebase_admin
 from firebase_admin import credentials
@@ -48,6 +49,7 @@ class StudentWindow(QtWidgets.QMainWindow):
         
         layout.addSpacing(20)
 
+        self.menu_buttons = []
         menu_items = [
             {"type": "header", "text": "TỔNG QUAN"},
             {"type": "active_btn", "text": "🎛️  Trang chủ"},
@@ -72,25 +74,31 @@ class StudentWindow(QtWidgets.QMainWindow):
             
             elif item["type"] == "btn" or item["type"] == "active_btn":
                 btn = QtWidgets.QPushButton(item["text"])
+                btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+                self.menu_buttons.append(btn)
+                
+                # SẮP XẾP LẠI INDEX CHUẨN XÁC THEO THỨ TỰ TỪ TRÊN XUỐNG
+                idx = -1
+                text = item["text"]
+                if "Trang chủ" in text: 
+                    idx = 0
+                elif "Thông tin cá nhân" in text: 
+                    idx = 1
+                elif "Danh sách sinh viên" in text: 
+                    idx = 2
+                elif "Lớp tín chỉ" in text: 
+                    idx = 3
+                elif "Lớp hành chính" in text: 
+                    idx = 4
+                elif "Cài đặt" in text: 
+                    idx = 5
+                
                 if item["type"] == "active_btn":
                     btn.setObjectName("menu_btn_active")
                 else:
                     btn.setObjectName("menu_btn")
-                
-                btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) 
-
-                if "Danh sách sinh viên" in item["text"]:
-                    btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
                     
-                if "Cài đặt" in item["text"]:
-                    btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
-
-                elif "Lớp hành chính" in item["text"]:
-                    btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(2))
-                
-                elif "Thông tin cá nhân" in item["text"]:
-                    btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
-                    
+                btn.clicked.connect(lambda _, b=btn, i=idx: self.handle_menu_click(b, i))
                 layout.addWidget(btn)
             
             elif item["type"] == "space":
@@ -99,9 +107,32 @@ class StudentWindow(QtWidgets.QMainWindow):
         layout.addStretch()
         self.main_layout.addWidget(self.sidebar)
 
+    def handle_menu_click(self, clicked_btn, index):
+        for btn in self.menu_buttons:
+            btn.setObjectName("menu_btn")
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+
+        clicked_btn.setObjectName("menu_btn_active")
+        clicked_btn.style().unpolish(clicked_btn)
+        clicked_btn.style().polish(clicked_btn)
+
+        if index != -1:
+            self.stacked_widget.setCurrentIndex(index)
     def setup_main(self):
         self.stacked_widget = QtWidgets.QStackedWidget()
-        # Trang 0 ds sinh vien
+
+        # ==========================================
+        # 1. KHỞI TẠO TẤT CẢ CÁC TRANG CỦA BẠN
+        # ==========================================
+        
+        # Trang 0: Trang chủ
+        self.home_page = Studenthomepage()
+        
+        # Trang 1: Thông tin cá nhân
+        self.personal_info_page = PersonalInfoWidget()
+
+        # Trang 2: Danh sách sinh viên
         self.student_page = QtWidgets.QWidget()
         self.student_page.setObjectName("main_content")
         content_layout = QtWidgets.QVBoxLayout(self.student_page)
@@ -164,15 +195,15 @@ class StudentWindow(QtWidgets.QMainWindow):
         ])
         
         header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents) # MSV
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents) # Lớp Học
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents) # Ngày Sinh
-        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents) # SĐT
-        header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents) # Hành Động
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents) 
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents) 
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents) 
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents) 
+        header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents) 
 
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)          # Họ Tên
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)          # Chuyên Ngành
-        header.setSectionResizeMode(6, QtWidgets.QHeaderView.Stretch)          # Địa Chỉ
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)          
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)          
+        header.setSectionResizeMode(6, QtWidgets.QHeaderView.Stretch)          
         
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.table.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -183,20 +214,19 @@ class StudentWindow(QtWidgets.QMainWindow):
         self.table.verticalHeader().setVisible(False)
 
         content_layout.addWidget(self.table)
-        
-        self.stacked_widget.addWidget(self.student_page) 
-
+        self.credit_class_page = QtWidgets.QWidget()
+        self.credit_class_page.setObjectName("main_content")
+        self.admin_class_page = StudentDashboard()
         self.setting_page = setting.SettingsWidget()
+
+        self.stacked_widget.addWidget(self.home_page)           
+        self.stacked_widget.addWidget(self.personal_info_page)   
+        self.stacked_widget.addWidget(self.student_page)       
+        self.stacked_widget.addWidget(self.credit_class_page)    
+        self.stacked_widget.addWidget(self.admin_class_page)  
         self.stacked_widget.addWidget(self.setting_page)
 
-        self.admin_class_page = StudentDashboard()
-        self.stacked_widget.addWidget(self.admin_class_page)
-
-        self.personal_info_page = PersonalInfoWidget()
-        self.stacked_widget.addWidget(self.personal_info_page)
-
         self.main_layout.addWidget(self.stacked_widget)
-
     def load_data(self):
         try:
             docs = db.collection("students").stream()
@@ -426,8 +456,8 @@ class StudentWindow(QtWidgets.QMainWindow):
                 border: none;
                 border-radius: 8px;
                 font-size: 15px;
-                color: #FFFFFF; /* Chữ trắng */
-                background-color: #D32F2F; /* Màu đỏ PTIT */
+                color: #FFFFFF;
+                background-color: #D32F2F; 
                 font-weight: 600;
             }
 

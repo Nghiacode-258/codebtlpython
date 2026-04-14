@@ -89,15 +89,17 @@ class SignUpWindow(QtWidgets.QMainWindow):
         self.ui = SignUpUI()
         self.ui.setupUi(self)
         self.ui.signup_button.clicked.connect(self.handle_signup)
+
         self.to_login = QtWidgets.QPushButton(self.ui.centralwidget)
         self.to_login.setText("Already have an account? Login")
-        self.to_login.setGeometry(110, 550, 250, 60)
+        
         self.to_login.setStyleSheet("""
             QPushButton{
                 background-color: transparent;
                 color: #4FC3F7;
                 border: none;
                 font-size: 14px;
+                text-align: center; 
             }
             QPushButton:hover{
                 color: #81D4FA;
@@ -105,6 +107,15 @@ class SignUpWindow(QtWidgets.QMainWindow):
             }
         """)
         self.to_login.clicked.connect(self.go_login)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        
+        button_width = 250
+        button_height = 60
+        x_center = (self.width() - button_width) // 2
+        y_position = 550
+        self.to_login.setGeometry(x_center, y_position, button_width, button_height)
 
     def go_login(self):
         self.login = LoginWindow()

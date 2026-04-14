@@ -1,135 +1,137 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+STYLE_SHEET = """
+    QWidget {
+        background-color: #F8F9FA;
+        font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    QFrame#topHeader {
+        background-color: white;
+        border-bottom: 1px solid #E5E7EB;
+    }
+    QLabel#pageTitle {
+        font-size: 20px;
+        font-weight: bold;
+        color: #111827;
+    }
+    QLineEdit#searchBox {
+        border: 1px solid #D1D5DB;
+        border-radius: 20px;
+        padding: 6px 16px;
+        font-size: 13px;
+        color: #374151;
+        background-color: white;
+        min-width: 220px;
+    }
+
+    QLineEdit#searchBox:focus { border: 1px solid #C81E1E; }
+
+    QPushButton#btnCapNhat {
+        background-color: #C81E1E; /* Sửa thành #EF4444 nếu muốn đỏ nhạt hơn */
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 18px;
+        font-size: 13px;
+        font-weight: bold;
+    }
+    QPushButton#btnCapNhat:hover { background-color: #A41616; }
+
+    QPushButton[class="outlineBtn"] {
+        background-color: white;
+        color: #374151;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        padding: 8px 18px;
+        font-size: 13px;
+    }
+    QPushButton[class="outlineBtn"]:hover { background-color: #F3F4F6; }
+
+    QFrame#mainCard {
+        background-color: white;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+    }
+    QLabel#cardMainTitle {
+        font-size: 17px;
+        font-weight: bold;
+        color: #111827;
+        letter-spacing: 2px;
+    }
+
+    QLabel[class="fieldLabel"] {
+        font-size: 12px;
+        color: #6B7280;
+        font-weight: bold;
+    }
+    
+    QLineEdit[class="fieldInput"] {
+        border: 1px solid #E5E7EB;
+        border-radius: 6px;
+        padding: 7px 10px;
+        font-size: 13px;
+        color: #111827;
+        background-color: white;
+    }
+
+    QLineEdit[class="fieldInput"]:focus {
+        border: 1.5px solid #C81E1E;
+        background-color: #FFFAFA;
+    }
+    
+    QLineEdit[class="fieldInput"]:read-only {
+        background-color: #F9FAFB;
+        color: #9CA3AF;
+    }
+    
+    QLabel[class="sectionLabel"] {
+        font-size: 13px;
+        font-weight: bold;
+        color: #111827;
+    }
+    QFrame[class="divider"] {
+        background-color: #F3F4F6;
+        border: none;
+        max-height: 1px;
+    }
+    QFrame#avatarFrame {
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        background: #F9FAFB;
+    }
+    QPushButton#btnDoiAnh {
+        background-color: white;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-size: 12px;
+        color: #374151;
+    }
+    QPushButton#btnDoiAnh:hover { background-color: #F3F4F6; }
+
+    QPushButton#btnLuu {
+        background-color: #C81E1E;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 9px 24px;
+        font-size: 13px;
+        font-weight: bold;
+    }
+    QPushButton#btnLuu:hover { background-color: #A41616; }
+"""
 
 class PersonalInfoWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #F8F9FA;
-                font-family: 'Segoe UI', Arial, sans-serif;
-            }
-            QFrame#topHeader {
-                background-color: white;
-                border-bottom: 1px solid #E5E7EB;
-            }
-            QLabel#pageTitle {
-                font-size: 20px;
-                font-weight: bold;
-                color: #111827;
-            }
-            QLineEdit#searchBox {
-                border: 1px solid #D1D5DB;
-                border-radius: 20px;
-                padding: 6px 16px;
-                font-size: 13px;
-                color: #374151;
-                background-color: white;
-                min-width: 220px;
-            }
-            QLineEdit#searchBox:focus { border: 1px solid #C81E1E; }
-
-            QPushButton#btnCapNhat {
-                background-color: #C81E1E;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 8px 18px;
-                font-size: 13px;
-                font-weight: bold;
-            }
-            QPushButton#btnCapNhat:hover { background-color: #A41616; }
-
-            QPushButton.outlineBtn {
-                background-color: white;
-                color: #374151;
-                border: 1px solid #D1D5DB;
-                border-radius: 6px;
-                padding: 8px 18px;
-                font-size: 13px;
-            }
-            QPushButton.outlineBtn:hover { background-color: #F3F4F6; }
-
-            QFrame#mainCard {
-                background-color: white;
-                border: 1px solid #E5E7EB;
-                border-radius: 12px;
-            }
-            QLabel#cardMainTitle {
-                font-size: 17px;
-                font-weight: bold;
-                color: #111827;
-                letter-spacing: 2px;
-            }
-
-            /* Label tên trường */
-            QLabel.fieldLabel {
-                font-size: 12px;
-                color: #6B7280;
-                font-weight: bold;
-            }
-            /* Ô nhập liệu */
-            QLineEdit.fieldInput {
-                border: 1px solid #E5E7EB;
-                border-radius: 6px;
-                padding: 7px 10px;
-                font-size: 13px;
-                color: #111827;
-                background-color: white;
-            }
-            QLineEdit.fieldInput:focus {
-                border: 1.5px solid #C81E1E;
-                background-color: #FFFAFA;
-            }
-            QLineEdit.fieldInput:read-only {
-                background-color: #F9FAFB;
-                color: #9CA3AF;
-            }
-            /* Section title (13, Địa chỉ...) */
-            QLabel.sectionLabel {
-                font-size: 13px;
-                font-weight: bold;
-                color: #111827;
-            }
-            QFrame.divider {
-                background-color: #F3F4F6;
-                border: none;
-                max-height: 1px;
-            }
-            QFrame#avatarFrame {
-                border: 1px solid #E5E7EB;
-                border-radius: 8px;
-                background: #F9FAFB;
-            }
-            QPushButton#btnDoiAnh {
-                background-color: white;
-                border: 1px solid #D1D5DB;
-                border-radius: 6px;
-                padding: 6px 14px;
-                font-size: 12px;
-                color: #374151;
-            }
-            QPushButton#btnDoiAnh:hover { background-color: #F3F4F6; }
-
-            QPushButton#btnLuu {
-                background-color: #C81E1E;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 9px 24px;
-                font-size: 13px;
-                font-weight: bold;
-            }
-            QPushButton#btnLuu:hover { background-color: #A41616; }
-        """)
+        self.setStyleSheet(STYLE_SHEET)
         self.setup_ui()
-
     def setup_ui(self):
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        root.addWidget(self._build_header())
+        # root.addWidget(self._build_header())
         root.addWidget(self._build_action_bar())
 
         scroll = QtWidgets.QScrollArea()
@@ -148,7 +150,6 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         scroll.setWidget(content)
         root.addWidget(scroll, 1)
 
-    # ── Header ───────────────────────────────────────────────────
     def _build_header(self):
         frame = QtWidgets.QFrame()
         frame.setObjectName("topHeader")
@@ -174,7 +175,6 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         layout.addWidget(bell)
         return frame
 
-    # ── Action bar ───────────────────────────────────────────────
     def _build_action_bar(self):
         bar = QtWidgets.QWidget()
         bar.setStyleSheet("background:white; border-bottom:1px solid #E5E7EB;")
@@ -183,12 +183,12 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         layout.setContentsMargins(24, 0, 24, 0)
         layout.setSpacing(10)
 
-        btn1 = QtWidgets.QPushButton("✏  Cap nhat ho so")
+        btn1 = QtWidgets.QPushButton("✏  Cập nhật hồ sơ")
         btn1.setObjectName("btnCapNhat")
         btn1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         layout.addWidget(btn1)
 
-        for label in ["📄  Hoc ba so", "📷  Cap nhat anh"]:
+        for label in ["📄  Học bạ số", "📷  Cập nhật ảnh"]:
             btn = QtWidgets.QPushButton(label)
             btn.setProperty("class", "outlineBtn")
             btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
@@ -197,7 +197,6 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         layout.addStretch()
         return bar
 
-    # ── Main card ────────────────────────────────────────────────
     def _build_main_card(self):
         frame = QtWidgets.QFrame()
         frame.setObjectName("mainCard")
@@ -206,7 +205,7 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         outer.setContentsMargins(32, 28, 32, 32)
         outer.setSpacing(20)
 
-        title = QtWidgets.QLabel("SO YEU LY LICH")
+        title = QtWidgets.QLabel("SƠ YẾU LÝ LỊCH")
         title.setObjectName("cardMainTitle")
         title.setAlignment(QtCore.Qt.AlignCenter)
         outer.addWidget(title)
@@ -252,6 +251,15 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         layout.addWidget(btn_doi, alignment=QtCore.Qt.AlignHCenter)
         return col
 
+    def _create_grid_row(self, fields_data):
+        g = QtWidgets.QGridLayout()
+        g.setContentsMargins(0, 8, 0, 8)
+        g.setSpacing(12)
+        for col_idx, (label_text, input_widget) in enumerate(fields_data):
+            g.addWidget(self._lbl(label_text), 0, col_idx)
+            g.addWidget(input_widget, 1, col_idx)
+        return g
+    
     # ── Cột form nhập liệu ───────────────────────────────────────
     def _build_form_col(self):
         col = QtWidgets.QWidget()
@@ -260,196 +268,143 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        def div():
+        def add_div():
             sep = QtWidgets.QFrame()
             sep.setFrameShape(QtWidgets.QFrame.HLine)
             sep.setProperty("class", "divider")
             sep.setContentsMargins(0, 4, 0, 4)
-            return sep
+            layout.addWidget(sep)
 
-        # ── Hàng 1: Mã SV | Họ tên | Trạng thái ────────────────
-        g1 = QtWidgets.QGridLayout()
-        g1.setContentsMargins(0, 8, 0, 8)
-        g1.setSpacing(12)
-        self.inp_masv      = self._make_input("VD: B24DCVN012", readonly=True)
-        self.inp_hoten     = self._make_input("Nguyen Van A")
-        self.inp_trangthai = self._make_input("Dang hoc / Bao luu...")
-        g1.addWidget(self._lbl("1. Ma sinh vien"),    0, 0)
-        g1.addWidget(self.inp_masv,                   1, 0)
-        g1.addWidget(self._lbl("2. Ho va ten"),       0, 1)
-        g1.addWidget(self.inp_hoten,                  1, 1)
-        g1.addWidget(self._lbl("5. Trang thai hoc"),  0, 2)
-        g1.addWidget(self.inp_trangthai,              1, 2)
-        layout.addLayout(g1)
-        layout.addWidget(div())
+        def add_section_title(text):
+            lbl = QtWidgets.QLabel(text)
+            lbl.setProperty("class", "sectionLabel")
+            lbl.setContentsMargins(0, 12, 0, 6)
+            layout.addWidget(lbl)
 
-        # ── Hàng 2: Giới tính | Ngày sinh ───────────────────────
-        g2 = QtWidgets.QGridLayout()
-        g2.setContentsMargins(0, 8, 0, 8)
-        g2.setSpacing(12)
-        self.inp_gioitinh  = self._make_input("Nam / Nu")
-        self.inp_ngaysinh  = self._make_input("DD/MM/YYYY")
-        g2.addWidget(self._lbl("3. Gioi tinh"),  0, 0)
-        g2.addWidget(self.inp_gioitinh,          1, 0)
-        g2.addWidget(self._lbl("4. Ngay sinh"),  0, 1)
-        g2.addWidget(self.inp_ngaysinh,          1, 1)
-        g2.setColumnStretch(1, 2)
-        layout.addLayout(g2)
-        layout.addWidget(div())
+        self.inp_masv = self._make_input("B24DCVN074", readonly=True)
+        self.inp_hoten = self._make_input("Nguyễn Đình Nghĩa")
+        self.inp_trangthai = self._make_input("Đang học")
+        layout.addLayout(self._create_grid_row([
+            ("1. Mã sinh viên", self.inp_masv),
+            ("2. Họ và tên", self.inp_hoten),
+            ("5. Trạng thái học", self.inp_trangthai)
+        ]))
+        add_div()
 
-        # ── Hàng 3: CCCD / CMND ──────────────────────────────────
-        g3 = QtWidgets.QGridLayout()
-        g3.setContentsMargins(0, 8, 0, 8)
-        g3.setSpacing(12)
-        self.inp_cccd      = self._make_input("So CCCD/CMND")
-        self.inp_cccd_ngay = self._make_input("Ngay cap (DD/MM/YYYY)")
-        self.inp_cccd_noi  = self._make_input("Noi cap")
-        g3.addWidget(self._lbl("6. CCCD/CMND"),  0, 0)
-        g3.addWidget(self.inp_cccd,              1, 0)
-        g3.addWidget(self._lbl("Ngay cap"),      0, 1)
-        g3.addWidget(self.inp_cccd_ngay,         1, 1)
-        g3.addWidget(self._lbl("Noi cap"),       0, 2)
-        g3.addWidget(self.inp_cccd_noi,          1, 2)
-        layout.addLayout(g3)
-        layout.addWidget(div())
+        # ── Hàng 2: Giới tính | Ngày sinh 
+        self.inp_gioitinh = self._make_input("Nam")
+        self.inp_ngaysinh = self._make_input("25/08/2006")
+        layout.addLayout(self._create_grid_row([
+            ("3. Giới tính", self.inp_gioitinh),
+            ("4. Ngày sinh", self.inp_ngaysinh)
+        ]))
+        add_div()
 
-        # ── Hàng 4: SĐT | Email ──────────────────────────────────
-        g4 = QtWidgets.QGridLayout()
-        g4.setContentsMargins(0, 8, 0, 8)
-        g4.setSpacing(12)
-        self.inp_sdt   = self._make_input("0xxx xxx xxx")
-        self.inp_email = self._make_input("example@ptit.edu.vn")
-        g4.addWidget(self._lbl("7. So dien thoai"),  0, 0)
-        g4.addWidget(self.inp_sdt,                   1, 0)
-        g4.addWidget(self._lbl("8. Email"),           0, 1)
-        g4.addWidget(self.inp_email,                  1, 1)
-        layout.addLayout(g4)
-        layout.addWidget(div())
+        # ── Hàng 3: CCCD / CMND 
+        self.inp_cccd = self._make_input("038206016228")
+        self.inp_cccd_ngay = self._make_input("19/04/2024")
+        self.inp_cccd_noi = self._make_input("Thanh Hoá")
+        layout.addLayout(self._create_grid_row([
+            ("6. CCCD/CMND", self.inp_cccd),
+            ("Ngày cấp", self.inp_cccd_ngay),
+            ("Nơi cấp", self.inp_cccd_noi)
+        ]))
+        add_div()
 
-        # ── Hàng 5: Khoa ngành | Chuyên ngành ───────────────────
-        g5 = QtWidgets.QGridLayout()
-        g5.setContentsMargins(0, 8, 0, 8)
-        g5.setSpacing(12)
-        self.inp_khoaNganh    = self._make_input("Ma lop - Ten khoa nganh")
-        self.inp_chuyenNganh  = self._make_input("Ten chuyen nganh")
-        g5.addWidget(self._lbl("9. Khoa nganh dao tao"),  0, 0)
-        g5.addWidget(self.inp_khoaNganh,                  1, 0, 1, 2)
-        g5.addWidget(self._lbl("Chuyen nganh"),           0, 2)
-        g5.addWidget(self.inp_chuyenNganh,                1, 2)
-        layout.addLayout(g5)
-        layout.addWidget(div())
+        # ── Hàng 4: SĐT | Email 
+        self.inp_sdt = self._make_input("0375 853 601")
+        self.inp_email = self._make_input("nghiand.b24vn074@stu.ptit.edu.vn")
+        layout.addLayout(self._create_grid_row([
+            ("7. Số điện thoại", self.inp_sdt),
+            ("8. Email", self.inp_email)
+        ]))
+        add_div()
 
-        # ── Hàng 6: Quốc tịch | Dân tộc | Tôn giáo ─────────────
-        g6 = QtWidgets.QGridLayout()
-        g6.setContentsMargins(0, 8, 0, 8)
-        g6.setSpacing(12)
-        self.inp_quoctich = self._make_input("Viet Nam...")
-        self.inp_dantoc   = self._make_input("Kinh...")
-        self.inp_tongiao  = self._make_input("Khong / Co")
-        g6.addWidget(self._lbl("10. Quoc tich"),  0, 0)
-        g6.addWidget(self.inp_quoctich,           1, 0)
-        g6.addWidget(self._lbl("11. Dan toc"),    0, 1)
-        g6.addWidget(self.inp_dantoc,             1, 1)
-        g6.addWidget(self._lbl("12. Ton giao"),   0, 2)
-        g6.addWidget(self.inp_tongiao,            1, 2)
-        layout.addLayout(g6)
-        layout.addWidget(div())
+        # ── Hàng 5: Khoa ngành | Chuyên ngành 
+        self.inp_khoaNganh = self._make_input("D24CQ - Công nghệ thông tin Việt - Nhật")
+        self.inp_chuyenNganh = self._make_input("Chưa cập nhật")
+        layout.addLayout(self._create_grid_row([
+            ("9. Khóa ngành đào tạo", self.inp_khoaNganh),
+            ("Chuyên ngành", self.inp_chuyenNganh)
+        ]))
+        add_div()
 
-        # ── Địa chỉ thường trú ───────────────────────────────────
-        sec13 = QtWidgets.QLabel("13. Dia chi thuong tru:")
-        sec13.setProperty("class", "sectionLabel")
-        sec13.setContentsMargins(0, 8, 0, 6)
-        layout.addWidget(sec13)
+        self.inp_quoctich = self._make_input("Việt Nam")
+        self.inp_dantoc = self._make_input("Kinh")
+        self.inp_tongiao = self._make_input("Không")
+        layout.addLayout(self._create_grid_row([
+            ("10. Quốc tịch", self.inp_quoctich),
+            ("11. Dân tộc", self.inp_dantoc),
+            ("12. Tôn giáo", self.inp_tongiao)
+        ]))
+        add_div()
 
-        g7 = QtWidgets.QGridLayout()
-        g7.setContentsMargins(12, 0, 0, 8)
-        g7.setSpacing(12)
-        self.inp_tinh   = self._make_input("Tinh / Thanh pho")
-        self.inp_xa     = self._make_input("Xa / Phuong / Dac khu")
-        self.inp_diachi = self._make_input("So nha, duong, thon...")
-        g7.addWidget(self._lbl("Tinh/Thanh pho"),       0, 0)
-        g7.addWidget(self.inp_tinh,                     1, 0)
-        g7.addWidget(self._lbl("Xa/Phuong/Dac khu"),    0, 1)
-        g7.addWidget(self.inp_xa,                       1, 1)
-        g7.addWidget(self._lbl("Dia chi cu the"),       0, 2)
-        g7.addWidget(self.inp_diachi,                   1, 2)
-        layout.addLayout(g7)
-        layout.addWidget(div())
+        # ── 13. Địa chỉ thường trú 
+        add_section_title("13. Địa chỉ thường trú:")
+        self.inp_tinh = self._make_input("Tỉnh Thanh Hóa")
+        self.inp_xa = self._make_input("Xã Trường Trung")
+        self.inp_diachi = self._make_input("Thôn Phượng Đoài")
+        layout.addLayout(self._create_grid_row([
+            ("Tỉnh/Thành phố", self.inp_tinh),
+            ("Xã/Phường/Đặc khu", self.inp_xa),
+            ("Địa chỉ", self.inp_diachi)
+        ]))
+        add_div()
 
-        # ── Đảng ─────────────────────────────────────────────────
-        sec14 = QtWidgets.QLabel("14. Dang:")
-        sec14.setProperty("class", "sectionLabel")
-        sec14.setContentsMargins(0, 8, 0, 6)
-        layout.addWidget(sec14)
+        # ── 14. Đảng 
+        add_section_title("14. Đảng:")
+        self.inp_dang_db = self._make_input("27/08/2024")
+        self.inp_dang_ct = self._make_input("27/08/2024")
+        layout.addLayout(self._create_grid_row([
+            ("Ngày vào Đảng dự bị", self.inp_dang_db),
+            ("Ngày vào Đảng chính thức", self.inp_dang_ct)
+        ]))
+        add_div()
 
-        g8 = QtWidgets.QGridLayout()
-        g8.setContentsMargins(12, 0, 0, 8)
-        g8.setSpacing(12)
-        self.inp_dang_db = self._make_input("DD/MM/YYYY")
-        self.inp_dang_ct = self._make_input("DD/MM/YYYY")
-        g8.addWidget(self._lbl("Ngay vao Dang du bi"),      0, 0)
-        g8.addWidget(self.inp_dang_db,                      1, 0)
-        g8.addWidget(self._lbl("Ngay vao Dang chinh thuc"), 0, 1)
-        g8.addWidget(self.inp_dang_ct,                      1, 1)
-        layout.addLayout(g8)
-        layout.addWidget(div())
+        self.inp_bhsv = self._make_input("HS4383822953565")
+        self.inp_mabv = self._make_input("")
+        layout.addLayout(self._create_grid_row([
+            ("15. Số bảo hiểm sinh viên", self.inp_bhsv),
+            ("16. Mã bệnh viện khám chữa bệnh", self.inp_mabv)
+        ]))
+        add_div()
 
-        # ── Bảo hiểm | Mã bệnh viện ──────────────────────────────
-        g9 = QtWidgets.QGridLayout()
-        g9.setContentsMargins(0, 8, 0, 8)
-        g9.setSpacing(12)
-        self.inp_bhsv  = self._make_input("HS...")
-        self.inp_mabv  = self._make_input("BV...")
-        g9.addWidget(self._lbl("15. So bao hiem sinh vien"),        0, 0)
-        g9.addWidget(self.inp_bhsv,                                 1, 0)
-        g9.addWidget(self._lbl("16. Ma benh vien kham chua benh"),  0, 1)
-        g9.addWidget(self.inp_mabv,                                 1, 1)
-        layout.addLayout(g9)
-        layout.addWidget(div())
+        # ── 17. Tài khoản ngân hàng 
+        add_section_title("17. Tài khoản ngân hàng:")
+        self.inp_ngan_hang = self._make_input("MB BANK")
+        self.inp_so_tk = self._make_input("25080625082006")
+        layout.addLayout(self._create_grid_row([
+            ("Tên ngân hàng", self.inp_ngan_hang),
+            ("Số tài khoản", self.inp_so_tk)
+        ]))
 
-        # ── Tài khoản ngân hàng ───────────────────────────────────
-        sec17 = QtWidgets.QLabel("17. Tai khoan ngan hang:")
-        sec17.setProperty("class", "sectionLabel")
-        sec17.setContentsMargins(0, 8, 0, 6)
-        layout.addWidget(sec17)
-
-        g10 = QtWidgets.QGridLayout()
-        g10.setContentsMargins(12, 0, 0, 8)
-        g10.setSpacing(12)
-        self.inp_ngan_hang = self._make_input("MB Bank / Vietcombank...")
-        self.inp_so_tk     = self._make_input("So tai khoan")
-        g10.addWidget(self._lbl("Ten ngan hang"),  0, 0)
-        g10.addWidget(self.inp_ngan_hang,          1, 0)
-        g10.addWidget(self._lbl("So tai khoan"),   0, 1)
-        g10.addWidget(self.inp_so_tk,              1, 1)
-        layout.addLayout(g10)
-
-        # ── Nút lưu ──────────────────────────────────────────────
-        layout.addSpacing(16)
+        # ── Nút lưu 
+        layout.addSpacing(24)
         btn_row = QtWidgets.QHBoxLayout()
-        self.btn_luu = QtWidgets.QPushButton("💾  Luu thong tin")
+        self.btn_luu = QtWidgets.QPushButton("💾 Lưu thông tin")
         self.btn_luu.setObjectName("btnLuu")
         self.btn_luu.setFixedHeight(38)
         self.btn_luu.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btn_luu.clicked.connect(self.handle_save)
-        btn_row.addWidget(self.btn_luu)
+        
         btn_row.addStretch()
+        btn_row.addWidget(self.btn_luu)
         layout.addLayout(btn_row)
 
         return col
 
-    # ── Helpers ──────────────────────────────────────────────────
     def _lbl(self, text: str) -> QtWidgets.QLabel:
         lbl = QtWidgets.QLabel(text)
         lbl.setProperty("class", "fieldLabel")
         return lbl
 
-    def _make_input(self, placeholder: str = "", readonly: bool = False) -> QtWidgets.QLineEdit:
+    def _make_input(self, text_value: str = "", readonly: bool = False) -> QtWidgets.QLineEdit:
         inp = QtWidgets.QLineEdit()
         inp.setProperty("class", "fieldInput")
-        inp.setPlaceholderText(placeholder)
+        inp.setText(text_value)
         inp.setReadOnly(readonly)
         inp.setFixedHeight(34)
+        inp.setCursorPosition(0) 
         return inp
 
     def handle_save(self):
