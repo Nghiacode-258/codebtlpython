@@ -2,6 +2,10 @@ import sys
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+import setting
+from lophanhchinh import StudentDashboard
+from thongtincanhan import PersonalInfoWidget
+
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
@@ -15,7 +19,7 @@ db = firestore.client()
 class StudentWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("🎓 Student Management")
+        self.setWindowTitle("I love the AI department")
         self.resize(1200, 700)
         self.central_widget = QtWidgets.QWidget()
         self.setCentralWidget(self.central_widget)
@@ -74,6 +78,19 @@ class StudentWindow(QtWidgets.QMainWindow):
                     btn.setObjectName("menu_btn")
                 
                 btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) 
+
+                if "Danh sách sinh viên" in item["text"]:
+                    btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
+                    
+                if "Cài đặt" in item["text"]:
+                    btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
+
+                elif "Lớp hành chính" in item["text"]:
+                    btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(2))
+                
+                elif "Thông tin cá nhân" in item["text"]:
+                    btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+                    
                 layout.addWidget(btn)
             
             elif item["type"] == "space":
@@ -83,21 +100,19 @@ class StudentWindow(QtWidgets.QMainWindow):
         self.main_layout.addWidget(self.sidebar)
 
     def setup_main(self):
-        self.content_widget = QtWidgets.QWidget()
-        self.content_widget.setObjectName("main_content")
-
-        content_layout = QtWidgets.QVBoxLayout(self.content_widget)
+        self.stacked_widget = QtWidgets.QStackedWidget()
+        # Trang 0 ds sinh vien
+        self.student_page = QtWidgets.QWidget()
+        self.student_page.setObjectName("main_content")
+        content_layout = QtWidgets.QVBoxLayout(self.student_page)
         content_layout.setContentsMargins(30, 20, 30, 20)
 
         header_layout = QtWidgets.QHBoxLayout()
         title_layout = QtWidgets.QVBoxLayout()
-
         title_label = QtWidgets.QLabel("Students")
         title_label.setObjectName("page_title")
-
         subtitle_label = QtWidgets.QLabel("Dashboard / Students")
         subtitle_label.setObjectName("page_subtitle")
-
         title_layout.addWidget(title_label)
         title_layout.addWidget(subtitle_label)
         
@@ -168,7 +183,19 @@ class StudentWindow(QtWidgets.QMainWindow):
         self.table.verticalHeader().setVisible(False)
 
         content_layout.addWidget(self.table)
-        self.main_layout.addWidget(self.content_widget)
+        
+        self.stacked_widget.addWidget(self.student_page) 
+
+        self.setting_page = setting.SettingsWidget()
+        self.stacked_widget.addWidget(self.setting_page)
+
+        self.admin_class_page = StudentDashboard()
+        self.stacked_widget.addWidget(self.admin_class_page)
+
+        self.personal_info_page = PersonalInfoWidget()
+        self.stacked_widget.addWidget(self.personal_info_page)
+
+        self.main_layout.addWidget(self.stacked_widget)
 
     def load_data(self):
         try:
@@ -344,6 +371,10 @@ class StudentWindow(QtWidgets.QMainWindow):
         df = pd.DataFrame(data_list)
         df.to_excel("students_cloud.xlsx", index=False)
         QtWidgets.QMessageBox.information(self, "Thành công", "Đã xuất file students_cloud.xlsx")
+
+    def open_setting_window(self):
+        self.setting_window = setting.SettingsWidget() 
+        self.setting_window.show()
 
     def apply_stylesheet(self):
         self.setStyleSheet("""
