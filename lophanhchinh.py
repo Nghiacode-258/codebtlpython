@@ -10,7 +10,9 @@ def get_initials(name: str) -> str:
     parts = name.strip().split()
     if len(parts) >= 2:
         return (parts[-1][0] + parts[0][0]).upper()
-    return parts[0][0].upper()
+    elif parts:
+        return parts[0][0].upper()
+    return "SV"
 
 class AvatarWidget(QtWidgets.QWidget):
     def __init__(self, name, color, size=48, font_size=15, parent=None):
@@ -36,46 +38,51 @@ class StudentCard(QtWidgets.QFrame):
     def __init__(self, student: dict, color: str, parent=None):
         super().__init__(parent)
         self.student = student
-        self.setMinimumHeight(148)
+        self.setMinimumHeight(80)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self._apply_normal_style()
 
         shadow = QtWidgets.QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(10)
-        shadow.setOffset(0, 2)
-        shadow.setColor(QtGui.QColor(0, 0, 0, 30))
+        shadow.setBlurRadius(8)
+        shadow.setOffset(0, 1)
+        shadow.setColor(QtGui.QColor(0, 0, 0, 15))
         self.setGraphicsEffect(shadow)
 
-        layout = QtWidgets.QVBoxLayout(self)
-        layout.setContentsMargins(12, 14, 12, 10)
-        layout.setSpacing(3)
-        layout.setAlignment(QtCore.Qt.AlignHCenter)
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(12)
+        layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
 
-        av = AvatarWidget(student["name"], color, size=44, font_size=15)
-        layout.addWidget(av, alignment=QtCore.Qt.AlignHCenter)
-        layout.addSpacing(4)
+        av = AvatarWidget(student.get("name", "Unknown"), color, size=40, font_size=14)
+        layout.addWidget(av)
 
-        name_lbl = QtWidgets.QLabel(student["name"])
+        info_layout = QtWidgets.QVBoxLayout()
+        info_layout.setSpacing(2)
+        info_layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+
+        name_lbl = QtWidgets.QLabel(student.get("name", "Unknown"))
         name_lbl.setFont(QtGui.QFont("Segoe UI", 10, QtGui.QFont.Bold))
         name_lbl.setStyleSheet("color: #111827; border: none; background: transparent;")
-        name_lbl.setAlignment(QtCore.Qt.AlignCenter)
-        name_lbl.setWordWrap(True)
-        layout.addWidget(name_lbl)
+        info_layout.addWidget(name_lbl)
 
-        meta = QtWidgets.QLabel(f"{student['id']} · {student['gender']}")
+        meta_text = f"{student.get('id', '')} • {student.get('gender', 'Nam')}"
+        if not student.get('id'):
+            meta_text = student.get('gender', 'Nam')
+        meta = QtWidgets.QLabel(meta_text)
         meta.setFont(QtGui.QFont("Segoe UI", 9))
-        meta.setStyleSheet("color: #9CA3AF; border: none; background: transparent;")
-        meta.setAlignment(QtCore.Qt.AlignCenter)
-        layout.addWidget(meta)
+        meta.setStyleSheet("color: #6B7280; border: none; background: transparent;")
+        info_layout.addWidget(meta)
 
-        role_color = "#C81E1E" if student["role"] == "Lớp trưởng" else (
-                     "#597EF7" if student["role"] == "Lớp phó" else "#9CA3AF")
-        role_lbl = QtWidgets.QLabel(student["role"])
+        role = student.get("role", "Thành viên")
+        role_color = "#C81E1E" if role == "Lớp trưởng" else (
+                     "#597EF7" if role == "Lớp phó" else "#6B7280")
+        role_lbl = QtWidgets.QLabel(role)
         role_lbl.setFont(QtGui.QFont("Segoe UI", 9))
         role_lbl.setStyleSheet(f"color: {role_color}; border: none; background: transparent;")
-        role_lbl.setAlignment(QtCore.Qt.AlignCenter)
-        layout.addWidget(role_lbl)
+        info_layout.addWidget(role_lbl)
+
+        layout.addLayout(info_layout)
 
     def _apply_normal_style(self):
         self.setStyleSheet("""
@@ -99,26 +106,20 @@ class StudentCard(QtWidgets.QFrame):
         if event.button() == QtCore.Qt.LeftButton:
             self.clicked.emit(self.student)
 
-    def leaveEvent(self, event):
-        self._apply_normal_style()
-
     def enterEvent(self, event):
         self._apply_hover_style()
-
-        self.anim = QPropertyAnimation(self, b"pos")
+        self.anim = QtCore.QPropertyAnimation(self, b"pos")
         self.anim.setDuration(120)
-        self.anim.setEasingCurve(QEasingCurve.OutCubic)
+        self.anim.setEasingCurve(QtCore.QEasingCurve.OutCubic)
         self.anim.setStartValue(self.pos())
         self.anim.setEndValue(self.pos() - QtCore.QPoint(0, 6))
         self.anim.start()
 
-
     def leaveEvent(self, event):
         self._apply_normal_style()
-
-        self.anim = QPropertyAnimation(self, b"pos")
+        self.anim = QtCore.QPropertyAnimation(self, b"pos")
         self.anim.setDuration(120)
-        self.anim.setEasingCurve(QEasingCurve.OutCubic)
+        self.anim.setEasingCurve(QtCore.QEasingCurve.OutCubic)
         self.anim.setStartValue(self.pos())
         self.anim.setEndValue(self.pos() + QtCore.QPoint(0, 6))
         self.anim.start()
@@ -127,33 +128,72 @@ class AddStudentDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Thêm sinh viên")
-        self.setFixedSize(320, 420)
+        self.setFixedSize(400, 480)
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #F8F9FA;
+            }
+            QLabel {
+                font-family: 'Segoe UI';
+                font-size: 13px;
+                color: #374151;
+            }
+            QLineEdit {
+                border: 1px solid #D1D5DB;
+                border-radius: 6px;
+                padding: 8px 12px;
+                background-color: white;
+                font-size: 13px;
+                color: #111827;
+                selection-background-color: #FCA5A5;
+            }
+            QLineEdit:focus {
+                border: 1px solid #C81E1E;
+            }
+            QPushButton#saveBtn {
+                background-color: #C81E1E;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 10px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton#saveBtn:hover {
+                background-color: #B91C1C;
+            }
+        """)
 
         layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(16)
+
+        form_layout = QtWidgets.QFormLayout()
+        form_layout.setSpacing(16)
+        form_layout.setLabelAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
 
         self.inputs = {}
-
         fields = [
-            ("name", "Họ tên"),
-            ("id", "Mã SV"),
-            ("email", "Email"),
-            ("gender", "Giới tính"),
+            ("id", "MSV"),
+            ("name", "Tên"),
+            ("class_name", "Lớp"),
+            ("major", "Ngành"),
             ("dob", "Ngày sinh"),
             ("phone", "SĐT"),
-            ("role", "Vai trò"),
+            ("address", "Địa chỉ"),
         ]
 
         for key, label in fields:
-            lbl = QtWidgets.QLabel(label)
             edit = QtWidgets.QLineEdit()
-            edit.setPlaceholderText(label)
-
-            layout.addWidget(lbl)
-            layout.addWidget(edit)
-
+            form_layout.addRow(label, edit)
             self.inputs[key] = edit
 
-        btn = QtWidgets.QPushButton("Thêm sinh viên")
+        layout.addLayout(form_layout)
+        layout.addStretch()
+
+        btn = QtWidgets.QPushButton("Lưu")
+        btn.setObjectName("saveBtn")
+        btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         btn.clicked.connect(self.accept)
         layout.addWidget(btn)
 
@@ -375,12 +415,12 @@ class StudentDashboard(QtWidgets.QWidget):
         self.all_students = self.load_students()
         self.filtered     = list(self.all_students)
         self.setup_ui()
-    
+
     def load_students(self):
         try:
             students_node = db.child("students").get()
             result = []
-            
+
             if students_node.each():
                 for student in students_node.each():
                     data = student.val()
@@ -405,9 +445,44 @@ class StudentDashboard(QtWidgets.QWidget):
                 self.all_students = self.load_students()
                 self.filtered = list(self.all_students)
                 self.render_student_grid()
-                self.count_lbl.setText(f"Danh sách sinh viên ({len(self.filtered)})")
+                self.count_lbl.setText(str(len(self.filtered)))
             except Exception as e:
                 QtWidgets.QMessageBox.critical(self, "Lỗi Firebase", f"Không thể thêm sinh viên: {str(e)}")
+
+    def quick_add_student(self):
+        text = self.add_member_input.text().strip()
+        if not text:
+            self.add_student()
+            return
+        
+        parts = text.split(maxsplit=1)
+        student_id = "B24DCVNxxx"
+        name = text
+        if len(parts) == 2 and parts[0].isalnum() and len(parts[0]) > 5:
+            student_id = parts[0]
+            name = parts[1]
+
+        data = {
+            "name": name,
+            "id": student_id,
+            "email": "",
+            "gender": "Nam",
+            "dob": "",
+            "phone": "",
+            "role": "Thành viên",
+        }
+
+        try:
+            db.child("students").push(data)
+            self.all_students = self.load_students()
+        except Exception:
+            data["firebase_key"] = "temp"
+            self.all_students.append(data)
+            
+        self.filtered = list(self.all_students)
+        self.render_student_grid()
+        self.count_lbl.setText(str(len(self.filtered)))
+        self.add_member_input.clear()
 
     def setup_ui(self):
         main_layout = QtWidgets.QVBoxLayout(self)
@@ -432,6 +507,7 @@ class StudentDashboard(QtWidgets.QWidget):
 
         scroll.setWidget(body_w)
         main_layout.addWidget(scroll, 1)
+
     def create_header(self):
         header = QtWidgets.QFrame()
         header.setFixedHeight(56)
@@ -445,13 +521,16 @@ class StudentDashboard(QtWidgets.QWidget):
         layout.addWidget(title)
         layout.addStretch()
 
-        for items in [["Học kỳ 1 - 2024","Học kỳ 2 - 2024"], ["CNTT-K65-1","CNTT-K65-2","CNTT-K64-1"]]:
-            combo = QtWidgets.QComboBox()
-            for item in items:
-                combo.addItem(item)
-            layout.addWidget(combo)
+        combo1 = QtWidgets.QComboBox()
+        combo1.addItem("Học kỳ 2 Năm học 2025 - 2026")
+        layout.addWidget(combo1)
+
+        combo2 = QtWidgets.QComboBox()
+        combo2.addItem("D24CQVN02-B")
+        layout.addWidget(combo2)
 
         return header
+
     def create_tab_bar(self):
         tab_container = QtWidgets.QWidget()
         tab_container.setObjectName("tabContainer")
@@ -464,7 +543,7 @@ class StudentDashboard(QtWidgets.QWidget):
 
         self.tab_btn_group = QtWidgets.QButtonGroup(self)
 
-        for i, label in enumerate(["Lớp hành chính"]):
+        for i, label in enumerate(["ⓘ Lớp hành chính"]):
             btn = QtWidgets.QPushButton(label)
             btn.setProperty("class", "tabButton")
             btn.setCheckable(True)
@@ -496,7 +575,7 @@ class StudentDashboard(QtWidgets.QWidget):
         layout.setContentsMargins(24, 20, 24, 20)
         layout.setSpacing(14)
 
-        title = QtWidgets.QLabel("Thông tin lớp học")
+        title = QtWidgets.QLabel("Thông tin lớp")
         title.setProperty("class", "cardTitle")
         layout.addWidget(title)
 
@@ -504,22 +583,23 @@ class StudentDashboard(QtWidgets.QWidget):
         grid.setSpacing(16)
 
         fields = [
-            ("Tên lớp",           "CNTT-K65-1",            0, 0),
-            ("Khoa sinh viên",    "Công nghệ Thông tin",    0, 1),
-            ("Ngành đào tạo",     "Kỹ thuật Phần mềm",     1, 0),
-            ("Vai trò trong lớp", "Lớp trưởng",            1, 1),
+            ("Tên lớp",           "D24CQVN02-B",            0, 0),
+            ("Khóa sinh viên",    "D24CQ",                  0, 1),
+            ("Ngành đào tạo",     "Công nghệ thông tin Việt - Nhật", 1, 0),
+            ("Vai trò trong lớp", "Lớp trưởng",             1, 1),
         ]
         for label, value, row, col in fields:
-            box = QtWidgets.QVBoxLayout()
-            box.setSpacing(3)
-            lbl = QtWidgets.QLabel(label)
+            box = QtWidgets.QHBoxLayout()
+            box.setSpacing(6)
+            lbl = QtWidgets.QLabel(label + ":")
             lbl.setProperty("class", "inputLabel")
             val = QtWidgets.QLabel(value)
             val.setProperty("class", "inputValue")
             if label == "Vai trò trong lớp":
-                val.setStyleSheet("color: #C81E1E; font-weight: bold;")
+                val.setStyleSheet("color: #111827; font-weight: bold;")
             box.addWidget(lbl)
             box.addWidget(val)
+            box.addStretch()
             w = QtWidgets.QWidget()
             w.setStyleSheet("background: transparent;")
             w.setLayout(box)
@@ -538,22 +618,64 @@ class StudentDashboard(QtWidgets.QWidget):
 
         # Header
         header_row = QtWidgets.QHBoxLayout()
-        self.count_lbl = QtWidgets.QLabel(f"Danh sách sinh viên ({len(self.all_students)})")
-        self.count_lbl.setProperty("class", "cardTitle")
+        header_row.setSpacing(8)
+        
+        title_lbl = QtWidgets.QLabel("Danh sách sinh viên")
+        title_lbl.setFont(QtGui.QFont("Segoe UI", 14, QtGui.QFont.Bold))
+        title_lbl.setStyleSheet("color: #111827;")
+        header_row.addWidget(title_lbl)
+        
+        self.count_lbl = QtWidgets.QLabel(str(len(self.filtered)))
+        self.count_lbl.setFont(QtGui.QFont("Segoe UI", 10, QtGui.QFont.Bold))
+        self.count_lbl.setStyleSheet("""
+            QLabel {
+                color: #52C41A;
+                background-color: #F6FFED;
+                border: 1px solid #B7EB8F;
+                border-radius: 10px;
+                padding: 2px 8px;
+            }
+        """)
         header_row.addWidget(self.count_lbl)
+        
         header_row.addStretch()
-        add_btn = QtWidgets.QPushButton("+")
-        add_btn.setFixedSize(32, 32)
+        
+        self.add_member_input = QtWidgets.QLineEdit()
+        self.add_member_input.setPlaceholderText("Nhập mã SV và Tên (VD: B24DCVN002 Nguyễn Văn A)...")
+        self.add_member_input.setFixedWidth(320)
+        self.add_member_input.setStyleSheet("""
+            QLineEdit {
+                border: 1px solid #D1D5DB;
+                border-radius: 6px;
+                padding: 8px 12px;
+                background-color: white;
+                font-size: 13px;
+                color: #111827;
+            }
+            QLineEdit:focus {
+                border: 2px solid #52C41A;
+            }
+        """)
+        self.add_member_input.returnPressed.connect(self.quick_add_student)
+        header_row.addWidget(self.add_member_input)
+
+        add_btn = QtWidgets.QPushButton("Thêm")
+        add_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #52C41A;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #73D13D;
+            }
+        """)
         add_btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        add_btn.clicked.connect(self.add_student)
-
+        add_btn.clicked.connect(self.quick_add_student)
         header_row.addWidget(add_btn)
-
-        self.search_input = QtWidgets.QLineEdit()
-        self.search_input.setPlaceholderText("🔍  Tìm sinh viên...")
-        self.search_input.setFixedWidth(240)
-        self.search_input.textChanged.connect(self.filter_students)
-        header_row.addWidget(self.search_input)
 
         layout.addLayout(header_row)
 
@@ -602,9 +724,9 @@ class StudentDashboard(QtWidgets.QWidget):
             return
 
         container_width = self.scroll.viewport().width()
-        card_width = 180
+        card_width = 280
         spacing = 16
-        cols = 4
+        cols = 3
 
         for i, student in enumerate(self.filtered):
             row = i // cols
@@ -624,7 +746,8 @@ class StudentDashboard(QtWidgets.QWidget):
         q = text.strip().lower()
         self.filtered = [s for s in self.all_students
                          if q in s["name"].lower() or q in s["id"]]
-        self.count_lbl.setText(f"Danh sách sinh viên ({len(self.filtered)})")
+        if hasattr(self, "count_lbl"):
+            self.count_lbl.setText(str(len(self.filtered)))
         self.render_student_grid()
 
     def open_student_modal(self, student):
@@ -673,8 +796,8 @@ class StudentDashboard(QtWidgets.QWidget):
         body_layout.setSpacing(0)
 
         advisors = [
-            ("TS. Nguyễn Thị Thu", "Giảng viên chính", "#C81E1E"),
-            ("ThS. Lê Minh Khoa",  "Cố vấn phụ",       "#FA8C16"),
+            ("Phạm Vũ Minh Tú", "--", "#C81E1E"),
+            ("Trần Thị Lan Phương",  "--", "#FA8C16"),
         ]
         for name, role, color in advisors:
             row = QtWidgets.QHBoxLayout()

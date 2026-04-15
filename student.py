@@ -6,6 +6,7 @@ import setting
 from lophanhchinh import StudentDashboard
 from thongtincanhan import PersonalInfoWidget
 from homepage import Studenthomepage
+from loptinchi import CreditClassWidget
 
 import firebase_admin
 from firebase_admin import credentials
@@ -121,15 +122,7 @@ class StudentWindow(QtWidgets.QMainWindow):
             self.stacked_widget.setCurrentIndex(index)
     def setup_main(self):
         self.stacked_widget = QtWidgets.QStackedWidget()
-
-        # ==========================================
-        # 1. KHỞI TẠO TẤT CẢ CÁC TRANG CỦA BẠN
-        # ==========================================
-        
-        # Trang 0: Trang chủ
         self.home_page = Studenthomepage()
-        
-        # Trang 1: Thông tin cá nhân
         self.personal_info_page = PersonalInfoWidget()
 
         # Trang 2: Danh sách sinh viên
@@ -216,6 +209,7 @@ class StudentWindow(QtWidgets.QMainWindow):
         content_layout.addWidget(self.table)
         self.credit_class_page = QtWidgets.QWidget()
         self.credit_class_page.setObjectName("main_content")
+        self.credit_class_page = CreditClassWidget()
         self.admin_class_page = StudentDashboard()
         self.setting_page = setting.SettingsWidget()
 

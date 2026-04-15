@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class PasswordField(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -14,10 +15,19 @@ class PasswordField(QtWidgets.QWidget):
         self.eye_btn = QtWidgets.QPushButton("👁")
         self.eye_btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.eye_btn.setFixedWidth(30)
-        self.eye_btn.setStyleSheet("""
-            QPushButton { background: transparent; border: none; font-size: 16px; color: #6B7280; }
-            QPushButton:hover { color: #C81E1E; }
-        """)
+        self.eye_btn.setStyleSheet(
+            """
+            QPushButton { 
+                background: transparent; 
+                border: none; 
+                font-size: 16px; 
+                color: #6B7280; 
+            }
+            QPushButton:hover { 
+                color: #C81E1E; 
+            }
+            """
+        )
         self.eye_btn.clicked.connect(self.toggle_echo)
         layout.addWidget(self.eye_btn)
 
@@ -32,18 +42,24 @@ class PasswordField(QtWidgets.QWidget):
             self.input.setEchoMode(QtWidgets.QLineEdit.Password)
             self.eye_btn.setText("👁")
 
-    # Hàm hỗ trợ lấy text từ bên ngoài
     def text(self):
         return self.input.text()
 
-# --- GIAO DIỆN CHÍNH ---
+
 class SettingsWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        self.setStyleSheet("""
-            QWidget {
+        self.setObjectName("SettingsScreen")
+        self.setStyleSheet(
+            """
+            QWidget#SettingsScreen {
                 background-color: #F8F9FA;
+            }
+            QWidget {
                 font-family: 'Segoe UI', Arial, sans-serif;
+            }
+            QLabel {
+                background: transparent;
             }
             QLabel#pageTitle {
                 font-size: 24px;
@@ -112,6 +128,7 @@ class SettingsWidget(QtWidgets.QWidget):
             QPushButton.primaryBtn {
                 background-color: #C81E1E;
                 color: white;
+                border: none;
                 border-radius: 6px;
                 padding: 10px 20px;
                 font-size: 14px;
@@ -120,7 +137,8 @@ class SettingsWidget(QtWidgets.QWidget):
             QPushButton.primaryBtn:hover {
                 background-color: #A41616;
             }
-        """)
+            """
+        )
         self.setup_ui()
 
     def setup_ui(self):
@@ -216,7 +234,6 @@ class SettingsWidget(QtWidgets.QWidget):
         self.btn_luu = QtWidgets.QPushButton("💾 Lưu thay đổi")
         self.btn_luu.setProperty("class", "primaryBtn")
         self.btn_luu.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        
         self.btn_luu.clicked.connect(self.handle_save)
         
         btn_layout.addWidget(self.btn_luu)
@@ -240,7 +257,6 @@ class SettingsWidget(QtWidgets.QWidget):
         layout.addWidget(subtitle)
         layout.addSpacing(10)
 
-        # --- SỬ DỤNG COMPONENT PasswordField MỚI TẠO ---
         layout.addWidget(self.create_label("Mật khẩu hiện tại"))
         self.inp_pass_old = PasswordField()
         layout.addWidget(self.inp_pass_old)
@@ -259,7 +275,6 @@ class SettingsWidget(QtWidgets.QWidget):
         self.btn_doimk = QtWidgets.QPushButton("🔑 Đổi mật khẩu")
         self.btn_doimk.setProperty("class", "primaryBtn")
         self.btn_doimk.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        
         self.btn_doimk.clicked.connect(self.handle_change_pass)
         
         btn_layout.addWidget(self.btn_doimk)
@@ -297,6 +312,7 @@ class SettingsWidget(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     import sys
+    
     app = QtWidgets.QApplication(sys.argv)
     window = SettingsWidget()
     window.resize(1000, 700)
