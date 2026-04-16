@@ -19,11 +19,26 @@ db = firestore.client()
 
 
 class StudentWindow(QtWidgets.QMainWindow):
-    def __init__(self, login_window_class=None):
+    def __init__(
+        self,
+        login_window_class=None,
+        auth_provider=None,
+        email="",
+        username="",
+        full_name="",
+        student_id="",
+        phone=""
+    ):
         super().__init__()
-
         self.login_window_class = login_window_class
         self.login_window = None
+
+        self.auth_provider = auth_provider
+        self.email = email
+        self.username = username
+        self.full_name = full_name
+        self.student_id = student_id
+        self.phone = phone
 
         self.setWindowTitle("I love the AI department")
         self.resize(1200, 700)
@@ -253,7 +268,14 @@ class StudentWindow(QtWidgets.QMainWindow):
 
         self.credit_class_page = CreditClassWidget()
         self.admin_class_page = StudentDashboard()
-        self.setting_page = setting.SettingsWidget()
+        self.setting_page = setting.SettingsWidget(
+            auth_provider=self.auth_provider,
+            email=self.email,
+            username=self.username,
+            full_name=self.full_name,
+            student_id=self.student_id,
+            phone=self.phone
+        )
 
         self.stacked_widget.addWidget(self.home_page)
         self.stacked_widget.addWidget(self.personal_info_page)

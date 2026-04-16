@@ -6,7 +6,6 @@ from signup import Ui_MainWindow as SignUpUI
 from student import StudentWindow
 from firebase_config import auth
 
-
 class LoginWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -57,13 +56,17 @@ class LoginWindow(QtWidgets.QMainWindow):
             auth.sign_in_with_email_and_password(username, password)
             QtWidgets.QApplication.restoreOverrideCursor()
 
-            QtWidgets.QMessageBox.information(
-                self,
-                "Success",
-                "Đăng nhập thành công!",
-            )
+            QtWidgets.QMessageBox.information(self, "Success", "Đăng nhập thành công!")
 
-            self.student = StudentWindow(login_window_class=LoginWindow)
+            self.student = StudentWindow(
+                login_window_class=LoginWindow,
+                auth_provider="firebase",
+                email=username,
+                username="",
+                full_name="",
+                student_id="",
+                phone=""
+            )
             self.student.show()
             self.close()
             return
@@ -72,27 +75,27 @@ class LoginWindow(QtWidgets.QMainWindow):
             print("Firebase fail → thử PTIT")
 
         from login_ptit import LoginRequest
-
         info = LoginRequest(username, password).attempt()
+
         QtWidgets.QApplication.restoreOverrideCursor()
 
         if info:
-            QtWidgets.QMessageBox.information(
-                self,
-                "Thành công",
-                f"Xin chào {info.name}",
-            )
+            QtWidgets.QMessageBox.information(self, "Thành công", f"Xin chào {info.name}")
 
-            self.student = StudentWindow(login_window_class=LoginWindow)
+            self.student = StudentWindow(
+                login_window_class=LoginWindow,
+                auth_provider="ptit",
+                email="",
+                username=username,
+                full_name=getattr(info, "name", ""),
+                student_id=getattr(info, "student_id", username),
+                phone=""
+            )
             self.student.setWindowTitle(f"{info.name} - {info.student_id}")
             self.student.show()
             self.close()
         else:
-            QtWidgets.QMessageBox.warning(
-                self,
-                "Lỗi",
-                "Sai tài khoản Firebase hoặc Code PTIT!",
-            )
+            QtWidgets.QMessageBox.warning(self, "Lỗi", "Sai tài khoản Firebase hoặc Code PTIT!")
 
     def handle_forgot_password(self, event):
         email, ok = QtWidgets.QInputDialog.getText(
