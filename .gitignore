@@ -1,2 +1,14 @@
 node_modeules/
 key.json
+
+__pycache__/
+*.pyc
+.vscode/
+
+*.dll
+*.exe
+*.pdb
+*.so
+*.dylib
+
+*.log

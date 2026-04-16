@@ -10,10 +10,6 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-
-# =========================
-# THEME
-# =========================
 class C:
     BG = "#F8F9FA"
     CARD = "#FFFFFF"

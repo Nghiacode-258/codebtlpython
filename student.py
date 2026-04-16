@@ -170,6 +170,7 @@ class StudentWindow(QtWidgets.QMainWindow):
         self.stacked_widget = QtWidgets.QStackedWidget()
 
         self.home_page = Studenthomepage()
+        
         self.personal_info_page = PersonalInfoWidget()
 
         self.student_page = QtWidgets.QWidget()

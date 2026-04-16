@@ -1,33 +1,26 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-PRIMARY        = "#c8003a"
-PRIMARY_DARK   = "#a0002e"
-PRIMARY_LIGHT  = "#ff4d7a"
-CARD_BG        = "#ffffff"
-PAGE_BG        = "#fdf0f3"
-TEXT_DARK      = "#1a1a2e"
-TEXT_MUTED     = "#9b8fa0"
-ACCENT_SOFT    = "#ffe4ec"
-BORDER_SOFT    = "#f5d0da"
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-STAT_DATA = [
-    {"title": "Tổng sinh viên", "value": "2,543", "icon": "👥", "sub": "+12 tuần này"},
-    {"title": "Lớp học",         "value": "48",    "icon": "🏫", "sub": "4 khoa"},
-    {"title": "Điểm trung bình", "value": "7.5",   "icon": "📊", "sub": "Học kỳ này"},
-    {"title": "Học kỳ hiện tại", "value": "HK 2",  "icon": "📅", "sub": "2024 – 2025"},
-]
+cred = credentials.Certificate(r"D:\VS code\codewep\btlpython\key.json")
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
 
-COURSE_DATA = [
-    {"code": "BAS1269",  "name": "Xác suất thống kê",          "bt": 18, "tuan": 10, "diem": 8.2},
-    {"code": "ELE1319",  "name": "Lý thuyết thông tin",        "bt": 22, "tuan": 11, "diem": 7.8},
-    {"code": "INT13145", "name": "Kiến trúc máy tính",         "bt": 15, "tuan": 9,  "diem": 9.0},
-    {"code": "MAT2040",  "name": "Giải tích 2",                 "bt": 20, "tuan": 12, "diem": 6.5},
-    {"code": "PHY1110",  "name": "Vật lý đại cương",           "bt": 12, "tuan": 8,  "diem": 7.2},
-    {"code": "CSE2030",  "name": "Lập trình hướng đối tượng",  "bt": 25, "tuan": 13, "diem": 9.5},
-]
+db = firestore.client()
 
-COURSE_ICONS = ["📐", "📡", "🖥️", "📘", "⚡", "💻"]
+PRIMARY = "#c8003a"
+PRIMARY_DARK = "#8f0029"
+PRIMARY_LIGHT = "#ff4d7a"
+CARD_BG = "#ffffff"
+PAGE_BG = "#fdf0f3"
+TEXT_DARK = "#111827"
+TEXT_MUTED = "#6b7280"
+ACCENT_SOFT = "#ffe4ec"
+BORDER_SOFT = "#f5c2cf"
+
+COURSE_ICONS = ["📐", "📡", "🖥️", "📘", "⚡", "💻", "📚", "🧠", "📝"]
 
 
 class StatCard(QtWidgets.QFrame):
@@ -39,19 +32,18 @@ class StatCard(QtWidgets.QFrame):
         self._build()
 
     def _build(self):
-        self.setFixedHeight(110)
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Fixed
-        )
+        self.setMinimumHeight(108)
+        self.setMaximumHeight(108)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.setObjectName("stat_card")
         self.setStyleSheet(f"""
-            StatCard {{
+            QFrame#stat_card {{
                 background: {CARD_BG};
                 border-radius: 16px;
                 border: 1.5px solid {BORDER_SOFT};
             }}
-            StatCard:hover {{
+            QFrame#stat_card:hover {{
                 border: 1.5px solid {PRIMARY_LIGHT};
                 background: #fff9fb;
             }}
@@ -61,54 +53,67 @@ class StatCard(QtWidgets.QFrame):
         root.setContentsMargins(20, 14, 20, 14)
         root.setSpacing(12)
 
-        # ── Left text block ──
         left = QtWidgets.QVBoxLayout()
         left.setSpacing(2)
 
-        lbl_title = QtWidgets.QLabel(self.data["title"])
-        lbl_title.setFont(QtGui.QFont("Segoe UI", 10))
-        lbl_title.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent;")
+        self.lbl_title = QtWidgets.QLabel(self.data.get("title", ""))
+        self.lbl_title.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent; font-size: 13px; font-weight: 600;")
 
-        lbl_value = QtWidgets.QLabel(self.data["value"])
-        lbl_value.setFont(QtGui.QFont("Segoe UI", 24, QtGui.QFont.Bold))
-        lbl_value.setStyleSheet(f"color: {PRIMARY}; background: transparent;")
+        val = str(self.data.get("value", ""))
+        if len(val) > 15: val = val.replace("Học kỳ", "HK").replace("Năm học", "Năm")
+        self.lbl_value = QtWidgets.QLabel(val)
+        fs = 17 if len(val) > 10 else 24
+        self.lbl_value.setStyleSheet(f"color: {PRIMARY}; background: transparent; font-size: {fs}px; font-weight: bold;")
 
-        lbl_sub = QtWidgets.QLabel(self.data.get("sub", ""))
-        lbl_sub.setFont(QtGui.QFont("Segoe UI", 8))
-        lbl_sub.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent;")
+        self.lbl_sub = QtWidgets.QLabel(self.data.get("sub", ""))
+        self.lbl_sub.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent; font-size: 11px;")
+        self.lbl_sub.setWordWrap(True)
 
-        left.addWidget(lbl_title)
-        left.addWidget(lbl_value)
-        left.addWidget(lbl_sub)
+        left.addWidget(self.lbl_title)
+        left.addWidget(self.lbl_value)
+        left.addWidget(self.lbl_sub)
         left.addStretch()
 
-        # ── Right icon bubble ──
-        lbl_icon = QtWidgets.QLabel(self.data["icon"])
-        lbl_icon.setFont(QtGui.QFont("Segoe UI", 20))
-        lbl_icon.setAlignment(QtCore.Qt.AlignCenter)
-        lbl_icon.setFixedSize(52, 52)
-        lbl_icon.setStyleSheet(f"""
+        self.lbl_icon = QtWidgets.QLabel(self.data.get("icon", "📊"))
+        self.lbl_icon.setAlignment(QtCore.Qt.AlignCenter)
+        self.lbl_icon.setFixedSize(50, 50)
+        self.lbl_icon.setStyleSheet(f"""
             background: {ACCENT_SOFT};
             border-radius: 14px;
+            color: {PRIMARY_DARK};
+            font-size: 22px;
         """)
 
         root.addLayout(left, 1)
-        root.addWidget(lbl_icon, 0, QtCore.Qt.AlignVCenter)
+        root.addWidget(self.lbl_icon, 0, QtCore.Qt.AlignVCenter)
+
+    def update_data(self, data: dict):
+        self.data = data
+        self.lbl_title.setText(data.get("title", ""))
+        val = str(data.get("value", ""))
+        if len(val) > 15: val = val.replace("Học kỳ", "HK").replace("Năm học", "Năm")
+        self.lbl_value.setText(val)
+        fs = 17 if len(val) > 10 else 24
+        self.lbl_value.setStyleSheet(f"color: {PRIMARY}; background: transparent; font-size: {fs}px; font-weight: bold;")
+        self.lbl_sub.setText(data.get("sub", ""))
+        self.lbl_icon.setText(data.get("icon", "📊"))
 
     def mousePressEvent(self, event):
         self.clicked.emit(self.data)
         super().mousePressEvent(event)
 
+
 class Chip(QtWidgets.QLabel):
     def __init__(self, label: str, value, parent=None):
         super().__init__(f"{label}: {value}", parent)
-        self.setFont(QtGui.QFont("Segoe UI", 9))
         self.setAlignment(QtCore.Qt.AlignCenter)
         self.setStyleSheet(f"""
             background: {ACCENT_SOFT};
             color: {PRIMARY};
             border-radius: 8px;
-            padding: 3px 10px;
+            padding: 4px 10px;
+            font-weight: bold;
+            font-size: 12px;
         """)
 
 
@@ -122,19 +127,18 @@ class CourseCard(QtWidgets.QFrame):
         self._build()
 
     def _build(self):
-        self.setMinimumHeight(155)
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Fixed
-        )
+        self.setMinimumHeight(150)
+        self.setMaximumHeight(160)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.setObjectName("course_card")
         self.setStyleSheet(f"""
-            CourseCard {{
+            QFrame#course_card {{
                 background: {CARD_BG};
                 border-radius: 16px;
                 border: 1.5px solid {BORDER_SOFT};
             }}
-            CourseCard:hover {{
+            QFrame#course_card:hover {{
                 border: 1.5px solid {PRIMARY_LIGHT};
                 background: #fff9fb;
             }}
@@ -144,49 +148,44 @@ class CourseCard(QtWidgets.QFrame):
         root.setContentsMargins(18, 16, 18, 16)
         root.setSpacing(8)
 
-        # ── Header row ──
         header = QtWidgets.QHBoxLayout()
         header.setSpacing(8)
 
-        lbl_code = QtWidgets.QLabel(self.data["code"])
-        lbl_code.setFont(QtGui.QFont("Segoe UI", 13, QtGui.QFont.Bold))
-        lbl_code.setStyleSheet(f"color: {PRIMARY}; background: transparent;")
+        self.lbl_code = QtWidgets.QLabel(self.data.get("code", ""))
+        self.lbl_code.setStyleSheet(f"color: {PRIMARY}; background: transparent; font-size: 16px; font-weight: bold;")
 
-        lbl_icon = QtWidgets.QLabel(self.icon)
-        lbl_icon.setFont(QtGui.QFont("Segoe UI", 18))
-        lbl_icon.setAlignment(QtCore.Qt.AlignCenter)
-        lbl_icon.setFixedSize(38, 38)
-        lbl_icon.setStyleSheet(f"""
+        self.lbl_icon = QtWidgets.QLabel(self.icon)
+        self.lbl_icon.setAlignment(QtCore.Qt.AlignCenter)
+        self.lbl_icon.setFixedSize(38, 38)
+        self.lbl_icon.setStyleSheet(f"""
             background: {ACCENT_SOFT};
-            border-radius: 10px;
+            border-radius: 11px;
+            color: {PRIMARY_DARK};
+            font-size: 20px;
         """)
 
-        header.addWidget(lbl_code)
+        header.addWidget(self.lbl_code)
         header.addStretch()
-        header.addWidget(lbl_icon)
+        header.addWidget(self.lbl_icon)
 
-        # ── Course name ──
-        lbl_name = QtWidgets.QLabel(self.data["name"])
-        lbl_name.setFont(QtGui.QFont("Segoe UI", 10))
-        lbl_name.setStyleSheet(f"color: {TEXT_DARK}; background: transparent;")
-        lbl_name.setWordWrap(True)
+        self.lbl_name = QtWidgets.QLabel(self.data.get("name", ""))
+        self.lbl_name.setStyleSheet(f"color: {TEXT_DARK}; background: transparent; font-size: 14px; font-weight: 600;")
+        self.lbl_name.setWordWrap(True)
 
-        # ── Divider ──
         divider = QtWidgets.QFrame()
         divider.setFrameShape(QtWidgets.QFrame.HLine)
         divider.setFixedHeight(1)
         divider.setStyleSheet(f"background: {BORDER_SOFT}; border: none;")
 
-        # ── Stats chips ──
         stats_row = QtWidgets.QHBoxLayout()
         stats_row.setSpacing(6)
-        stats_row.addWidget(Chip("Bài tập", f"{self.data['bt']} / 29"))
-        stats_row.addWidget(Chip("Tuần", self.data["tuan"]))
-        stats_row.addWidget(Chip("Điểm", self.data["diem"]))
+        stats_row.addWidget(Chip("Tín chỉ", self.data.get("credits", "")))
+        stats_row.addWidget(Chip("Lớp HP", self.data.get("class_code", "")))
+        stats_row.addWidget(Chip("Phòng", self.data.get("room", "")))
         stats_row.addStretch()
 
         root.addLayout(header)
-        root.addWidget(lbl_name)
+        root.addWidget(self.lbl_name)
         root.addWidget(divider)
         root.addLayout(stats_row)
         root.addStretch()
@@ -196,206 +195,298 @@ class CourseCard(QtWidgets.QFrame):
         super().mousePressEvent(event)
 
 
-# ─────────────────────────────────────────────
-#  HEADER BAR
-# ─────────────────────────────────────────────
-class HeaderBar(QtWidgets.QWidget):
-    logout_clicked = QtCore.pyqtSignal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedHeight(64)
-        self.setStyleSheet(f"""
-            HeaderBar {{
-                background: qlineargradient(
-                    x1:0, y1:0, x2:1, y2:0,
-                    stop:0 {PRIMARY_DARK},
-                    stop:1 {PRIMARY_LIGHT}
-                );
-            }}
-        """)
-        self._build()
-
-    def _build(self):
-        layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(28, 0, 28, 0)
-        layout.setSpacing(0)
-
-        # ── Brand (left) ──
-        brand = QtWidgets.QHBoxLayout()
-        brand.setSpacing(10)
-
-        lbl_logo = QtWidgets.QLabel("🎓")
-        lbl_logo.setFont(QtGui.QFont("Segoe UI", 22))
-        lbl_logo.setStyleSheet("background: transparent; color: white;")
-
-        lbl_title = QtWidgets.QLabel("Student Manager")
-        lbl_title.setFont(QtGui.QFont("Segoe UI", 16, QtGui.QFont.Bold))
-        lbl_title.setStyleSheet("background: transparent; color: white;")
-
-        brand.addWidget(lbl_logo)
-        brand.addWidget(lbl_title)
-
-        # ── Logout button (right) ──
-        btn_logout = QtWidgets.QPushButton("⎋  Đăng xuất")
-        btn_logout.setFont(QtGui.QFont("Segoe UI", 10, QtGui.QFont.Bold))
-        btn_logout.setFixedSize(130, 36)
-        btn_logout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        btn_logout.setStyleSheet(f"""
-            QPushButton {{
-                background: rgba(255,255,255,0.18);
-                color: white;
-                border: 1.5px solid rgba(255,255,255,0.45);
-                border-radius: 10px;
-            }}
-            QPushButton:hover {{
-                background: rgba(255,255,255,0.32);
-            }}
-            QPushButton:pressed {{
-                background: rgba(255,255,255,0.10);
-            }}
-        """)
-        btn_logout.clicked.connect(self.logout_clicked.emit)
-
-        layout.addLayout(brand)
-        layout.addStretch()
-        layout.addWidget(btn_logout)
-
 class Studenthomepage(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Student Manager")
-        self.resize(1200, 720)
-        self.setMinimumSize(900, 600)
+        self.stat_cards = []
+        self.course_cards = []
+        self.stats_data = []
+        self.credit_rows = []
+        self._last_stat_cols = -1
+        self._last_course_cols = -1
+
         self._apply_style()
         self._build()
+        self.load_dashboard_data()
 
     def _apply_style(self):
+        self.setObjectName("homepage_root")
         self.setStyleSheet(f"""
-            QMainWindow, QWidget#central {{
+            QWidget#homepage_root {{
                 background: {PAGE_BG};
-            }}
-            QScrollArea {{
-                background: transparent;
-                border: none;
-            }}
-            QScrollBar:vertical {{
-                background: {BORDER_SOFT};
-                width: 7px;
-                border-radius: 4px;
-                margin: 0;
-            }}
-            QScrollBar::handle:vertical {{
-                background: {PRIMARY_LIGHT};
-                border-radius: 4px;
-                min-height: 30px;
-            }}
-            QScrollBar::add-line:vertical,
-            QScrollBar::sub-line:vertical {{
-                height: 0;
             }}
         """)
 
     def _build(self):
-        # 1. Thiết lập layout chính cho trang chủ
-        main_layout = QtWidgets.QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
 
-        # 2. Thêm Header (Thanh tiêu đề màu đỏ)
-        self.header = HeaderBar()
-        self.header.logout_clicked.connect(self._on_logout)
-        main_layout.addWidget(self.header)
+        self.scroll_area = QtWidgets.QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.scroll_area.setStyleSheet("QScrollArea { background: transparent; border: none; }")
 
-        # 3. Khu vực cuộn (Scroll Area) cho nội dung bên dưới
-        scroll = QtWidgets.QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        scroll.setStyleSheet("background: transparent; border: none;")
-        main_layout.addWidget(scroll)
-
-        # 4. Widget chứa nội dung thực tế
-        body = QtWidgets.QWidget()
-        body.setObjectName("home_body")
-        body.setStyleSheet(f"#home_body {{ background: {PAGE_BG}; }}")
-        scroll.setWidget(body)
-
-        body_layout = QtWidgets.QVBoxLayout(body)
-        body_layout.setContentsMargins(32, 28, 32, 32)
-        body_layout.setSpacing(28)
+        self.scroll_content = QtWidgets.QWidget()
+        self.scroll_content.setStyleSheet("background: transparent;")
         
-        body_layout.addLayout(self._build_welcome())
-        body_layout.addLayout(self._build_stats())
-        body_layout.addWidget(self._section_label("Lớp tín chỉ  📚"))
-        body_layout.addLayout(self._build_courses())
-        body_layout.addStretch()
+        layout = QtWidgets.QVBoxLayout(self.scroll_content)
+        layout.setContentsMargins(30, 24, 30, 24)
+        layout.setSpacing(22)
+
+        layout.addLayout(self._build_welcome())
+
+        self.stats_container = QtWidgets.QWidget()
+        self.stats_grid = QtWidgets.QGridLayout(self.stats_container)
+        self.stats_grid.setContentsMargins(0, 0, 0, 0)
+        self.stats_grid.setSpacing(16)
+        layout.addWidget(self.stats_container)
+
+        self.section_title = self._section_label("Lớp tín chỉ  📚")
+        layout.addWidget(self.section_title)
+
+        self.courses_container = QtWidgets.QWidget()
+        self.courses_grid = QtWidgets.QGridLayout(self.courses_container)
+        self.courses_grid.setContentsMargins(0, 0, 0, 0)
+        self.courses_grid.setSpacing(18)
+        layout.addWidget(self.courses_container)
+
+        layout.addStretch()
+        
+        footer = QtWidgets.QLabel("🎓 S-Link - Hệ thống quản lý sinh viên")
+        footer.setAlignment(QtCore.Qt.AlignCenter)
+        footer.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 12px; margin-top: 20px;")
+        layout.addWidget(footer)
+
+        self.scroll_area.setWidget(self.scroll_content)
+        self.main_layout.addWidget(self.scroll_area)
+
+        initial_stats = [
+            {"title": "Tổng sinh viên", "value": "0", "icon": "👥", "sub": "Từ danh sách sinh viên"},
+            {"title": "Lớp học", "value": "0", "icon": "🏫", "sub": "Tổng lớp tín chỉ"},
+            {"title": "Tổng tín chỉ", "value": "0", "icon": "📊", "sub": "Từ collection credit"},
+            {"title": "Học kỳ hiện tại", "value": "--", "icon": "📅", "sub": "Từ dữ liệu credit"},
+        ]
+
+        for data in initial_stats:
+            card = StatCard(data)
+            card.clicked.connect(self._on_stat_click)
+            self.stat_cards.append(card)
 
     def _build_welcome(self):
         layout = QtWidgets.QVBoxLayout()
-        layout.setSpacing(4)
+        layout.setSpacing(6)
 
-        lbl_greeting = QtWidgets.QLabel("Chào mừng trở lại 👋")
-        lbl_greeting.setFont(QtGui.QFont("Segoe UI", 26, QtGui.QFont.Bold))
-        lbl_greeting.setStyleSheet(f"color: {TEXT_DARK}; background: transparent;")
+        self.lbl_greeting = QtWidgets.QLabel("Chào mừng trở lại 👋")
+        self.lbl_greeting.setStyleSheet(f"""
+            color: {TEXT_DARK};
+            background: transparent;
+            font-weight: 800;
+            font-size: 28px;
+        """)
 
-        lbl_sub = QtWidgets.QLabel("Quản lí thông tin sinh viên một cách hiệu quả")
-        lbl_sub.setFont(QtGui.QFont("Segoe UI", 12))
-        lbl_sub.setStyleSheet(f"color: {TEXT_MUTED}; background: transparent;")
+        self.lbl_sub = QtWidgets.QLabel("Quản lí sinh viên một cách hiệu quả")
+        self.lbl_sub.setStyleSheet(f"""
+            color: {TEXT_MUTED};
+            background: transparent;
+            font-weight: 600;
+            font-size: 14px;
+        """)
 
-        layout.addWidget(lbl_greeting)
-        layout.addWidget(lbl_sub)
+        layout.addWidget(self.lbl_greeting)
+        layout.addWidget(self.lbl_sub)
         return layout
 
-    # ── Stat cards ───────────────────────────
-    def _build_stats(self):
-        layout = QtWidgets.QHBoxLayout()
-        layout.setSpacing(16)
-        for d in STAT_DATA:
-            card = StatCard(d)
-            card.clicked.connect(self._on_stat_click)
-            layout.addWidget(card)
-        return layout
+    def _section_label(self, text: str):
+        label = QtWidgets.QLabel(text)
+        label.setStyleSheet(f"""
+            color: {TEXT_DARK};
+            background: transparent;
+            font-weight: 800;
+            font-size: 20px;
+        """)
+        return label
 
-    # ── Course cards ─────────────────────────
-    def _build_courses(self):
-        grid = QtWidgets.QGridLayout()
-        grid.setSpacing(16)
-        for i, course in enumerate(COURSE_DATA):
+    def _clear_layout(self, layout):
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            child_layout = item.layout()
+            if widget is not None:
+                widget.setParent(None)
+            elif child_layout is not None:
+                self._clear_layout(child_layout)
+
+    def _get_stat_columns(self):
+        width = max(1, self.width())
+        if width >= 1100:
+            return 4
+        if width >= 760:
+            return 2
+        return 1
+
+    def _get_course_columns(self):
+        width = max(1, self.width())
+        if width >= 1200:
+            return 3
+        if width >= 760:
+            return 2
+        return 1
+
+    def _rebuild_stats_grid(self):
+        cols = self._get_stat_columns()
+        if cols == self._last_stat_cols:
+            return
+
+        self._last_stat_cols = cols
+        self._clear_layout(self.stats_grid)
+
+        for i, card in enumerate(self.stat_cards):
+            row = i // cols
+            col = i % cols
+            self.stats_grid.addWidget(card, row, col)
+
+        for col in range(cols):
+            self.stats_grid.setColumnStretch(col, 1)
+
+    def _rebuild_courses_grid(self):
+        cols = self._get_course_columns()
+        if cols == self._last_course_cols and self.courses_grid.count() > 0:
+            return
+
+        self._last_course_cols = cols
+        self._clear_layout(self.courses_grid)
+
+        if not self.credit_rows:
+            empty = QtWidgets.QLabel("Chưa có dữ liệu lớp tín chỉ")
+            empty.setAlignment(QtCore.Qt.AlignCenter)
+            empty.setMinimumHeight(120)
+            empty.setStyleSheet(f"""
+                color: {TEXT_MUTED};
+                background: {CARD_BG};
+                border: 1.5px solid {BORDER_SOFT};
+                border-radius: 16px;
+                font-size: 16px;
+                font-weight: 600;
+            """)
+            self.courses_grid.addWidget(empty, 0, 0, 1, cols)
+            return
+
+        self.course_cards.clear()
+        for i, course in enumerate(self.credit_rows):
             card = CourseCard(course, icon=COURSE_ICONS[i % len(COURSE_ICONS)])
             card.clicked.connect(self._on_course_click)
-            row, col = divmod(i, 3)
-            grid.addWidget(card, row, col)
-        grid.setColumnStretch(0, 1)
-        grid.setColumnStretch(1, 1)
-        grid.setColumnStretch(2, 1)
-        return grid
+            self.course_cards.append(card)
 
-    # ── Section label ─────────────────────────
-    def _section_label(self, text: str) -> QtWidgets.QLabel:
-        lbl = QtWidgets.QLabel(text)
-        lbl.setFont(QtGui.QFont("Segoe UI", 16, QtGui.QFont.Bold))
-        lbl.setStyleSheet(f"color: {TEXT_DARK}; background: transparent;")
-        return lbl
+            row = i // cols
+            col = i % cols
+            self.courses_grid.addWidget(card, row, col)
 
-    # ── Slots ─────────────────────────────────
-    def _on_logout(self):
-        print("[ACTION] Đăng xuất")
+        for col in range(cols):
+            self.courses_grid.setColumnStretch(col, 1)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._rebuild_stats_grid()
+        self._rebuild_courses_grid()
+
+    def load_dashboard_data(self):
+        total_students = 0
+        credit_rows = []
+
+        try:
+            total_students = len(list(db.collection("students").stream()))
+        except Exception as e:
+            print(f"Lỗi tải tổng sinh viên: {e}")
+
+        try:
+            for doc in db.collection("credit").stream():
+                data = doc.to_dict()
+                credit_rows.append({
+                    "id": doc.id,
+                    "code": data.get("course_code", ""),
+                    "name": data.get("course_name", ""),
+                    "credits": data.get("credits", ""),
+                    "class_code": data.get("class_code", ""),
+                    "teacher": data.get("teacher", ""),
+                    "schedule": data.get("schedule", ""),
+                    "room": data.get("room", ""),
+                    "size": data.get("size", ""),
+                    "status": data.get("status", ""),
+                    "semester": data.get("semester", ""),
+                })
+        except Exception as e:
+            print(f"Lỗi tải lớp tín chỉ: {e}")
+
+        total_credit_classes = len(credit_rows)
+
+        total_credits = 0
+        for row in credit_rows:
+            try:
+                total_credits += int(row.get("credits", 0))
+            except Exception:
+                pass
+
+        current_semester = "--"
+        if credit_rows:
+            semester = str(credit_rows[0].get("semester", "")).strip()
+            if semester:
+                current_semester = semester
+
+        self.stats_data = [
+            {
+                "title": "Tổng sinh viên",
+                "value": str(total_students),
+                "icon": "👥",
+                "sub": "Từ danh sách sinh viên",
+            },
+            {
+                "title": "Lớp học",
+                "value": str(total_credit_classes),
+                "icon": "🏫",
+                "sub": "Tổng lớp tín chỉ",
+            },
+            {
+                "title": "Tổng tín chỉ",
+                "value": str(total_credits),
+                "icon": "📊",
+                "sub": "Từ collection credit",
+            },
+            {
+                "title": "Học kỳ hiện tại",
+                "value": current_semester,
+                "icon": "📅",
+                "sub": "Từ dữ liệu credit",
+            },
+        ]
+
+        self.credit_rows = credit_rows
+        self.update_stats(self.stats_data)
+        self._rebuild_stats_grid()
+        self._rebuild_courses_grid()
+
+    def update_stats(self, stats):
+        for i, data in enumerate(stats):
+            if i < len(self.stat_cards):
+                self.stat_cards[i].update_data(data)
+
+    def refresh_data(self):
+        self.load_dashboard_data()
 
     def _on_stat_click(self, data):
-        print(f"[STAT] {data['title']} → {data['value']}")
+        print(f"[STAT] {data.get('title', '')} → {data.get('value', '')}")
 
     def _on_course_click(self, data):
-        print(f"[COURSE] {data['code']} – {data['name']}")
+        print(f"[COURSE] {data.get('code', '')} – {data.get('name', '')}")
 
 
-# ─────────────────────────────────────────────
-#  ENTRY
-# ─────────────────────────────────────────────
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     app.setStyle("Fusion")
     app.setFont(QtGui.QFont("Segoe UI", 10))
 
     window = Studenthomepage()
+    window.resize(1200, 720)
     window.show()
+
     sys.exit(app.exec_())

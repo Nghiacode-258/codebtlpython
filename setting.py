@@ -8,7 +8,7 @@ from firebase_config import auth
 
 class ChangePasswordCodePTITThread(QThread):
     update_status = pyqtSignal(str)
-    finished = pyqtSignal(bool, str)  # (success, message)
+    finished = pyqtSignal(bool, str)
 
     def __init__(self, username, old_password, new_password):
         super().__init__()
@@ -40,7 +40,6 @@ class ChangePasswordCodePTITThread(QThread):
                 self.finished.emit(False, "❌ Mật khẩu cũ không đúng. Vui lòng kiểm tra lại!")
                 return
 
-            # Truy cập trang đổi mật khẩu để lấy token + tên input động
             get_pw = session.get(change_pw_url, timeout=10)
             soup_pw = BeautifulSoup(get_pw.text, "html.parser")
 
