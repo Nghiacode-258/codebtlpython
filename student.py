@@ -27,7 +27,8 @@ class StudentWindow(QtWidgets.QMainWindow):
         username="",
         full_name="",
         student_id="",
-        phone=""
+        phone="",
+        firebase_uid=""
     ):
         super().__init__()
         self.login_window_class = login_window_class
@@ -39,6 +40,7 @@ class StudentWindow(QtWidgets.QMainWindow):
         self.full_name = full_name
         self.student_id = student_id
         self.phone = phone
+        self.firebase_uid = firebase_uid
 
         self.setWindowTitle("I love the AI department")
         self.resize(1200, 700)
@@ -171,7 +173,13 @@ class StudentWindow(QtWidgets.QMainWindow):
 
         self.home_page = Studenthomepage()
         
-        self.personal_info_page = PersonalInfoWidget()
+        self.personal_info_page = PersonalInfoWidget(
+            firebase_uid=self.firebase_uid,
+            email=self.email,
+            full_name=self.full_name,
+            student_id=self.student_id,
+            phone=self.phone
+        )
 
         self.student_page = QtWidgets.QWidget()
         self.student_page.setObjectName("main_content")

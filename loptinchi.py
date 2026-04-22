@@ -13,7 +13,7 @@ db = firestore.client()
 class C:
     BG = "#F8F9FA"
     CARD = "#FFFFFF"
-    BORDER = "#E5E7EB"
+    BORDER = "#F4B6C2"
 
     TXT = "#111827"
     TXT2 = "#374151"
@@ -73,9 +73,6 @@ class IconSquare(QtWidgets.QWidget):
         painter.drawText(self.rect(), QtCore.Qt.AlignCenter, self.icon)
 
 
-# =========================
-# STAT CARD
-# =========================
 class StatCard(QtWidgets.QFrame):
     def __init__(self, title, value, icon, icon_bg, icon_fg, parent=None):
         super().__init__(parent)

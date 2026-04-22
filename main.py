@@ -53,7 +53,8 @@ class LoginWindow(QtWidgets.QMainWindow):
         QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
 
         try:
-            auth.sign_in_with_email_and_password(username, password)
+            user = auth.sign_in_with_email_and_password(username, password)
+            firebase_uid = user["localId"]
             QtWidgets.QApplication.restoreOverrideCursor()
 
             QtWidgets.QMessageBox.information(self, "Success", "Đăng nhập thành công!")
@@ -65,7 +66,8 @@ class LoginWindow(QtWidgets.QMainWindow):
                 username="",
                 full_name="",
                 student_id="",
-                phone=""
+                phone="",
+                firebase_uid=firebase_uid
             )
             self.student.show()
             self.close()
@@ -89,7 +91,8 @@ class LoginWindow(QtWidgets.QMainWindow):
                 username=username,
                 full_name=getattr(info, "name", ""),
                 student_id=getattr(info, "student_id", username),
-                phone=""
+                phone="",
+                firebase_uid=""
             )
             self.student.setWindowTitle(f"{info.name} - {info.student_id}")
             self.student.show()
