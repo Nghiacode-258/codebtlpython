@@ -23,39 +23,15 @@ STYLE_SHEET = """
         color: #1E3A8A;
         font-size: 13px;
     }
-
-    QPushButton#btnCapNhat {
-        background-color: #DC2626;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 8px 16px;
-        font-size: 13px;
-        font-weight: 500;
-    }
-    QPushButton#btnCapNhat:hover { background-color: #B91C1C; }
-
-    QPushButton.outlineBtn {
-        background-color: white;
-        color: #374151;
-        border: 1px solid #D1D5DB;
-        border-radius: 4px;
-        padding: 8px 16px;
-        font-size: 13px;
-    }
-    QPushButton.outlineBtn:hover { background-color: #F3F4F6; }
-
     QLabel#cardMainTitle {
         font-size: 20px;
         color: #374151;
         margin-bottom: 24px;
     }
-
     QLabel.infoLabel {
         font-size: 13px;
         color: #111827;
     }
-
     QLabel.badgeBlue {
         background-color: #EBF5FF;
         color: #2563EB;
@@ -64,6 +40,35 @@ STYLE_SHEET = """
         font-size: 11px;
         padding: 2px 6px;
         font-weight: 500;
+    }
+"""
+
+OUTLINE_BTN_STYLE = """
+    QPushButton {
+        background-color: white;
+        color: #374151;
+        border: 1px solid #D1D5DB;
+        border-radius: 4px;
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    QPushButton:hover {
+        background-color: #F3F4F6;
+    }
+"""
+
+PRIMARY_BTN_STYLE = """
+    QPushButton {
+        background-color: #DC2626;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    QPushButton:hover {
+        background-color: #B91C1C;
     }
 """
 
@@ -117,6 +122,7 @@ class PersonalInfoWidget(QtWidgets.QWidget):
 
         content = QtWidgets.QWidget()
         content.setStyleSheet("background: white;")
+
         cl = QtWidgets.QVBoxLayout(content)
         cl.setContentsMargins(32, 24, 32, 32)
         cl.setSpacing(16)
@@ -125,6 +131,7 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         banner.setObjectName("alertBanner")
         banner_layout = QtWidgets.QHBoxLayout(banner)
         banner_layout.setContentsMargins(20, 14, 20, 14)
+
         alert_text = QtWidgets.QLabel(
             'Đợt cập nhật hồ sơ <b>"Đợt cập nhật hồ sơ"</b> từ ngày <b>01/11/2024</b> đến ngày <b>31/03/2028</b>'
         )
@@ -135,22 +142,21 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         action_bar = QtWidgets.QHBoxLayout()
         action_bar.setSpacing(12)
 
-        btn2 = QtWidgets.QPushButton("☰ Học bạ số")
-        btn2.setProperty("class", "outlineBtn")
-        btn2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        action_bar.addWidget(btn2)
+        self.btn_hoc_ba = QtWidgets.QPushButton("☰ Học bạ số")
+        self.btn_hoc_ba.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btn_hoc_ba.setStyleSheet(OUTLINE_BTN_STYLE)
+        action_bar.addWidget(self.btn_hoc_ba)
 
-        btn3 = QtWidgets.QPushButton("⟲ Cập nhật ảnh nhận diện")
-        btn3.setProperty("class", "outlineBtn")
-        btn3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        action_bar.addWidget(btn3)
+        self.btn_cap_nhat_anh = QtWidgets.QPushButton("⟲ Cập nhật ảnh nhận diện")
+        self.btn_cap_nhat_anh.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btn_cap_nhat_anh.setStyleSheet(OUTLINE_BTN_STYLE)
+        action_bar.addWidget(self.btn_cap_nhat_anh)
 
-        # NÚT MỚI
-        btn4 = QtWidgets.QPushButton("✎ Cập nhật hồ sơ")
-        btn4.setObjectName("btnCapNhat")
-        btn4.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        btn4.clicked.connect(self.open_update_dialog)
-        action_bar.addWidget(btn4)
+        self.btn_cap_nhat_ho_so = QtWidgets.QPushButton("✎ Cập nhật hồ sơ")
+        self.btn_cap_nhat_ho_so.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btn_cap_nhat_ho_so.setStyleSheet(PRIMARY_BTN_STYLE)
+        self.btn_cap_nhat_ho_so.clicked.connect(self.open_update_dialog)
+        action_bar.addWidget(self.btn_cap_nhat_ho_so)
 
         action_bar.addStretch()
         cl.addLayout(action_bar)
@@ -168,7 +174,9 @@ class PersonalInfoWidget(QtWidgets.QWidget):
 
         avatar_lbl = QtWidgets.QLabel()
         avatar_lbl.setFixedSize(150, 190)
-        avatar_lbl.setStyleSheet("background-color: #2D3748; border: 1px solid #E5E7EB; border-radius: 4px;")
+        avatar_lbl.setStyleSheet(
+            "background-color: #2D3748; border: 1px solid #E5E7EB; border-radius: 4px;"
+        )
 
         avatar_wrapper = QtWidgets.QVBoxLayout()
         avatar_wrapper.addWidget(avatar_lbl)
@@ -181,7 +189,6 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         self.info_container_layout.setSpacing(0)
 
         self.render_info_grid()
-
         body.addWidget(self.info_container, 1)
 
         cl.addLayout(body)
@@ -257,13 +264,16 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         trang_thai_layout.addWidget(self._lbl("<b>5. Trạng thái học:</b>"))
         trang_thai_layout.addWidget(self._badge(trang_thai_hoc))
         trang_thai_layout.addStretch()
+
         w = QtWidgets.QWidget()
         w.setLayout(trang_thai_layout)
         trang_thai_layout.setContentsMargins(0, 0, 0, 0)
         grid.addWidget(w, 1, 2)
 
         grid.addWidget(
-            self._lbl(f"<b>6. CCCD/CMND:</b> {cccd}, Ngày cấp: {ngay_cap_cccd}, Nơi cấp: {noi_cap_cccd}"),
+            self._lbl(
+                f"<b>6. CCCD/CMND:</b> {cccd}, Ngày cấp: {ngay_cap_cccd}, Nơi cấp: {noi_cap_cccd}"
+            ),
             2, 0, 1, 3
         )
 
@@ -275,6 +285,7 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         khoa_layout.addWidget(self._badge(trang_thai_hoc))
         khoa_layout.addWidget(self._lbl(f"(Chuyên ngành: <i>{chuyen_nganh}</i>)"))
         khoa_layout.addStretch()
+
         w_khoa = QtWidgets.QWidget()
         w_khoa.setLayout(khoa_layout)
         khoa_layout.setContentsMargins(0, 0, 0, 0)
@@ -309,9 +320,31 @@ class PersonalInfoWidget(QtWidgets.QWidget):
 
         dialog = QtWidgets.QDialog(self)
         dialog.setWindowTitle("Cập nhật hồ sơ")
-        dialog.resize(700, 650)
+        dialog.resize(720, 680)
+        dialog.setStyleSheet("""
+            QDialog {
+                background: white;
+            }
+            QLabel {
+                font-size: 13px;
+                color: #374151;
+            }
+            QLineEdit, QComboBox {
+                border: 1px solid #D1D5DB;
+                border-radius: 6px;
+                padding: 8px 10px;
+                background: white;
+                color: #111827;
+                min-height: 20px;
+            }
+            QLineEdit:focus, QComboBox:focus {
+                border: 1px solid #DC2626;
+            }
+        """)
 
         main_layout = QtWidgets.QVBoxLayout(dialog)
+        main_layout.setContentsMargins(16, 16, 16, 16)
+        main_layout.setSpacing(12)
 
         scroll = QtWidgets.QScrollArea()
         scroll.setWidgetResizable(True)
@@ -320,16 +353,17 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         form_widget = QtWidgets.QWidget()
         form_layout = QtWidgets.QFormLayout(form_widget)
         form_layout.setLabelAlignment(QtCore.Qt.AlignRight)
+        form_layout.setFormAlignment(QtCore.Qt.AlignTop)
         form_layout.setSpacing(12)
 
         inputs = {}
 
-        def add_line(name, key):
+        def add_line(label_text, key):
             line = QtWidgets.QLineEdit()
             line.setText(self.profile.get(key, ""))
             line.setMinimumHeight(36)
             inputs[key] = line
-            form_layout.addRow(name, line)
+            form_layout.addRow(label_text, line)
 
         add_line("Mã sinh viên:", "ma_sinh_vien")
         add_line("Họ và tên:", "ho_ten")
@@ -377,11 +411,13 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         btn_layout.addStretch()
 
         cancel_btn = QtWidgets.QPushButton("Hủy")
-        cancel_btn.setProperty("class", "outlineBtn")
+        cancel_btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        cancel_btn.setStyleSheet(OUTLINE_BTN_STYLE)
         cancel_btn.setMinimumHeight(36)
 
         save_btn = QtWidgets.QPushButton("Lưu")
-        save_btn.setObjectName("btnCapNhat")
+        save_btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        save_btn.setStyleSheet(PRIMARY_BTN_STYLE)
         save_btn.setMinimumHeight(36)
 
         btn_layout.addWidget(cancel_btn)
@@ -408,6 +444,7 @@ class PersonalInfoWidget(QtWidgets.QWidget):
         save_btn.clicked.connect(save_data)
         dialog.exec_()
 
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     app.setStyle("Fusion")
@@ -417,4 +454,5 @@ if __name__ == "__main__":
     window.setWindowTitle("Thông tin cá nhân")
     window.resize(1200, 700)
     window.show()
+
     sys.exit(app.exec_())
